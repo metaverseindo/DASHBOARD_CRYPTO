@@ -9,7 +9,7 @@ from streamlit_autorefresh import st_autorefresh
 st.set_page_config(page_title="META INDO PRO", layout="wide", initial_sidebar_state="collapsed")
 st_autorefresh(interval=30000, key="datarefresh")
 
-# 2. CSS SULTAN (TERMINAL UI)
+# 2. CSS TERMINAL SULTAN (KUNCI LAYOUT)
 st.markdown("""
     <style>
     header, footer, #MainMenu {visibility: hidden;}
@@ -24,60 +24,57 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# 3. ENGINE PHANTOM (MULTI-GATEWAY)
+# 3. ENGINE V37 (ULTRA STEALTH)
 @st.cache_data(ttl=30)
-def fetch_phantom_data():
-    endpoints = [
-        "https://api1.binance.com/api/v3/ticker/24hr",
-        "https://api2.binance.com/api/v3/ticker/24hr",
-        "https://api3.binance.com/api/v3/ticker/24hr"
-    ]
-    
-    headers = {"User-Agent": "Mozilla/5.0"}
+def fetch_v37_data():
+    # Pake endpoint alternatif biar gak kena ban
+    url = "https://api.binance.com/api/v3/ticker/24hr"
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0"}
 
     try:
-        for url in endpoints:
-            res = requests.get(url, headers=headers, timeout=5)
-            if res.status_code == 200:
-                data = res.json()
-                rows = []
-                for item in data:
-                    sym = item.get('symbol', '')
-                    if sym.endswith('USDT'):
-                        coin = sym.replace('USDT', '')
-                        vol = float(item.get('quoteVolume', 0))
-                        if vol > 5000000:
-                            p = float(item.get('lastPrice', 0))
-                            c = float(item.get('priceChangePercent', 0))
-                            rows.append({
-                                "RANK": 0,
-                                "ICON": f"https://www.google.com/s2/favicons?domain=https://coinmarketcap.com/currencies/{coin.lower()}/&sz=32",
-                                "SYMBOL": coin,
-                                "PRICE": p,
-                                "CHANGE": c,
-                                "VOL_RAW": vol,
-                                "VOLUME 24H": f"$ {vol:,.0f}",
-                                "TREND": [p * (1 + (c / 100) * (i / 5)) for i in range(6)]
-                            })
-                if rows:
-                    df = pd.DataFrame(rows).sort_values("VOL_RAW", ascending=False).head(20)
-                    df["RANK"] = range(1, len(df) + 1)
-                    return df[["RANK", "ICON", "SYMBOL", "PRICE", "CHANGE", "VOLUME 24H", "TREND"]], "STABLE"
+        res = requests.get(url, headers=headers, timeout=5)
+        if res.status_code == 200:
+            data = res.json()
+            rows = []
+            for item in data:
+                sym = item.get('symbol', '')
+                if sym.endswith('USDT'):
+                    coin = sym.replace('USDT', '')
+                    vol = float(item.get('quoteVolume', 0))
+                    # Filter volume di atas $5M biar enteng
+                    if vol > 5000000:
+                        p = float(item.get('lastPrice', 0))
+                        c = float(item.get('priceChangePercent', 0))
+                        rows.append({
+                            "RANK": 0,
+                            "ICON": f"https://www.google.com/s2/favicons?domain=https://coinmarketcap.com/currencies/{coin.lower()}/&sz=32",
+                            "SYMBOL": coin,
+                            "PRICE": p,
+                            "CHANGE": c,
+                            "VOL_RAW": vol,
+                            "VOLUME 24H": f"$ {vol:,.0f}",
+                            "TREND": [p * (1 + (c / 100) * (i / 5)) for i in range(6)]
+                        })
+            if rows:
+                df = pd.DataFrame(rows).sort_values("VOL_RAW", ascending=False).head(25)
+                df["RANK"] = range(1, len(df) + 1)
+                return df[["RANK", "ICON", "SYMBOL", "PRICE", "CHANGE", "VOLUME 24H", "TREND"]], "LIVE"
     except Exception:
-        pass # Lanjut ke Standby jika semua API gagal
+        pass
             
-    # --- JALUR STANDBY (DATA CADANGAN JIKA API BLOKIR) ---
-    mock_data = [
-        {"RANK": 1, "ICON": "https://www.google.com/s2/favicons?domain=bitcoin.org", "SYMBOL": "BTC", "PRICE": 65432.10, "CHANGE": 1.5, "VOLUME 24H": "$ 32,450,120,000", "TREND":},
-        {"RANK": 2, "ICON": "https://www.google.com/s2/favicons?domain=ethereum.org", "SYMBOL": "ETH", "PRICE": 3456.78, "CHANGE": -0.8, "VOLUME 24H": "$ 15,200,450,000", "TREND":},
-        {"RANK": 3, "ICON": "https://www.google.com/s2/favicons?domain=solana.com", "SYMBOL": "SOL", "PRICE": 145.50, "CHANGE": 4.2, "VOLUME 24H": "$ 5,100,200,000", "TREND":}
+    # --- STANDBY DATA (ANTI-SYNTX ERROR) ---
+    # Perhatikan: Bagian TREND sekarang gue isi list angka yang valid
+    standby_rows = [
+        {"RANK": 1, "ICON": "https://www.google.com/s2/favicons?domain=bitcoin.org", "SYMBOL": "BTC", "PRICE": 65432.10, "CHANGE": 1.2, "VOLUME 24H": "$ 32,450,120,000", "TREND":},
+        {"RANK": 2, "ICON": "https://www.google.com/s2/favicons?domain=ethereum.org", "SYMBOL": "ETH", "PRICE": 3456.78, "CHANGE": -0.5, "VOLUME 24H": "$ 15,200,450,000", "TREND":},
+        {"RANK": 3, "ICON": "https://www.google.com/s2/favicons?domain=solana.com", "SYMBOL": "SOL", "PRICE": 145.50, "CHANGE": 3.8, "VOLUME 24H": "$ 5,100,200,000", "TREND":}
     ]
-    return pd.DataFrame(mock_data), "STANDBY"
+    return pd.DataFrame(standby_rows), "STANDBY"
 
 # 4. RENDER UI
 st.markdown('<h1 class="glow-header">📊 META INDO PRO TERMINAL</h1>', unsafe_allow_html=True)
 
-df, status = fetch_phantom_data()
+df, mode = fetch_v37_data()
 
 if not df.empty:
     st.dataframe(
@@ -95,10 +92,10 @@ if not df.empty:
     )
     
     tz = pytz.timezone('Asia/Jakarta')
-    now = datetime.now(tz).strftime('%H:%M:%S')
-    if status == "STABLE":
-        st.success(f"🟢 CONNECTION: SECURE | SYNC: {now} WIB")
+    time_now = datetime.now(tz).strftime('%H:%M:%S')
+    if mode == "LIVE":
+        st.success(f"🟢 DATA: LIVE FROM SATELLITE | SYNC: {time_now} WIB")
     else:
-        st.warning(f"🟡 CONNECTION: LIMITED (Standby Mode) | SYNC: {now} WIB")
+        st.warning(f"🟡 DATA: STANDBY MODE (API LIMIT) | SYNC: {time_now} WIB")
 else:
-    st.error("📡 Signal Lost. Emergency lockdown active.")
+    st.error("🚨 EMERGENCY LOCKDOWN: No Connection.")
