@@ -29,7 +29,7 @@ with st.sidebar:
     exchange_choice = st.selectbox("Pilih Exchange:", ["KuCoin", "Binance"])
     auto_refresh = st.toggle("Auto-refresh (30s)", value=True)
     st.markdown("---")
-    st.info("Gunakan KuCoin jika Binance memblokir IP.")
+    st.info("Tips: Gunakan KuCoin jika Binance memblokir IP.")
 
 # --- 4. FUNGSI AMBIL DATA ---
 def fetch_crypto_data(ex_name):
@@ -50,20 +50,20 @@ def fetch_crypto_data(ex_name):
                 })
         return rows
     except Exception as e:
-        st.error(f"API Error: {e}")
+        st.error(f"Error: {e}")
         return []
 
 # --- 5. HEADER (FIXED: st.columns(2)) ---
 col_h1, col_h2 = st.columns(2) 
 with col_h1:
     st.title("📈 CRYPTO NEON")
-    st.caption(f"Source: {exchange_choice} | Stable 3.14")
+    st.caption(f"Source: {exchange_choice} | Python 3.14 Build")
 with col_h2:
     if st.button("🔄 Force Refresh"):
         st.rerun()
 
 # --- 6. MAIN ENGINE ---
-with st.spinner("🚀 Syncing..."):
+with st.spinner("🚀 Syncing with Blockchain..."):
     data = fetch_crypto_data(exchange_choice)
 
 if len(data) > 0:
@@ -86,7 +86,7 @@ if len(data) > 0:
     st.markdown("---")
 
     # --- TABLE & CHART (FIXED BARIS 90: st.columns()) ---
-    # Ini yang tadi bikin lu dapet TypeError. Sekarang udah ada spec-nya!
+    # SEKARANG SUDAH ADA PARAMETERNYA! GAK AKAN ERROR 'spec' LAGI.
     col_table, col_chart = st.columns()
     
     with col_table:
@@ -130,7 +130,7 @@ if len(data) > 0:
     st.caption(f"Last sync: {datetime.now().strftime('%H:%M:%S')}")
 
 else:
-    st.warning("⚠️ Data gagal ditarik.")
+    st.warning("⚠️ Koneksi API gagal. Coba ganti exchange di sidebar.")
 
 # --- 7. AUTO REFRESH ---
 if auto_refresh:
