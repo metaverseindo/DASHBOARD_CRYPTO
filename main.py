@@ -102,8 +102,3 @@ st.subheader(f"Tabel Semua Koin USDT — Diurutkan Volume Tertinggi")
 st.dataframe(styled, use_container_width=True, hide_index=True, height=600)
 
 st.caption(f"Terakhir diperbarui: {datetime.now().strftime('%d %b %Y, %H:%M:%S')}")
-
-if auto_refresh:
-    import time
-    time.sleep(30)
-    st.rerun()
