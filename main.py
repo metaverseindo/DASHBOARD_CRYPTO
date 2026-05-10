@@ -2,95 +2,97 @@ import streamlit as st
 import pandas as pd
 import ccxt
 
-# 1. KONFIGURASI (Harus paling atas sebelum markdown)
-st.set_page_config(
-    page_title="Crypto Metaverse Dashboard",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
+# 1. CONFIG (Wajib di paling atas)
+st.set_page_config(page_title="Neon Crypto", layout="wide", initial_sidebar_state="collapsed")
 
-# 2. CUSTOM CSS (Smooth Scroll + Hide GitHub UI + Metaverse Theme)
+# 2. INJECT TAILWIND & CUSTOM CSS
+# Kita panggil script Tailwind dari CDN biar class-nya aktif
 st.markdown("""
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-    /* Smooth Scroll */
-    html { scroll-behavior: smooth; }
+    /* Sembunyikan Header & Footer Streamlit agar bersih */
+    header, footer, #MainMenu {visibility: hidden;}
     
-    /* Hide Streamlit Elements (GitHub, Edit, Footer) */
-    header {visibility: hidden;}
-    footer {visibility: hidden;}
-    #MainMenu {visibility: hidden;}
+    /* Paksa Background Deep Dark ala Tailwind Slate-950 */
+    .stApp {
+        background-color: #020617;
+        scroll-behavior: smooth;
+    }
+
+    /* Custom Scrollbar Neon */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: #020617; }
+    ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 5px; }
     
-    /* Neon Scrollbar */
-    ::-webkit-scrollbar { width: 8px; }
-    ::-webkit-scrollbar-track { background: #0b0e11; }
-    ::-webkit-scrollbar-thumb { background: #00ffc8; border-radius: 10px; }
-    
-    /* Deep Dark Background */
-    .stApp { background-color: #0b0e11; color: #eaecef; }
-    
-    /* Neon Metric */
-    [data-testid="stMetricValue"] { color: #00ffc8 !important; font-family: 'monospace'; }
+    /* Styling Metric Streamlit agar sinkron dengan Tailwind */
+    [data-testid="stMetricValue"] {
+        color: #34d399 !important; /* Emerald 400 */
+        font-family: 'ui-monospace', monospace;
+        font-weight: 800;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. FUNGSI DATA
-def get_crypto_data():
+# 3. FUNGSI AMBIL DATA
+def get_data():
     try:
-        exchange = ccxt.kucoin()
-        tickers = exchange.fetch_tickers()
-        rows = []
-        for s, v in tickers.items():
-            if '/USDT' in s:
-                rows.append({
-                    "Koin": s.split('/'), # FIX: Ambil index 0
-                    "Harga": v['last'],
-                    "Vol": v['quoteVolume']
-                })
-        return rows
-    except:
-        return []
+        ex = ccxt.kucoin()
+        tickers = ex.fetch_tickers()
+        return [{"Koin": s.split('/'), "Harga": v['last'], "Vol": v['quoteVolume'], "Change": v['percentage'] or 0.0} 
+                for s, v in tickers.items() if '/USDT' in s]
+    except: return []
 
-# 4. HEADER
-st.title("⚡ CRYPTO METAVERSEINDO")
-if st.button("🔄 REFRESH DATA"):
+# 4. HEADER PAKE TAILWIND CLASSES
+# Kita bungkus title pake div Tailwind biar makin cakep
+st.markdown("""
+    <div class="flex justify-between items-center bg-slate-900/50 p-6 rounded-2xl border border-slate-800 mb-8">
+        <div>
+            <h1 class="text-3xl font-black text-emerald-400 tracking-tighter">⚡ NEON TERMINAL</h1>
+            <p class="text-slate-400 text-sm font-medium">Real-time Crypto Analytics Engine</p>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+if st.button("🔄 Sync Blockchain Data"):
     st.rerun()
 
-# 5. ENGINE
-data = get_crypto_data()
-
+# 5. ENGINE & DISPLAY
+data = get_data()
 if data:
     df = pd.DataFrame(data).sort_values("Vol", ascending=False)
     
-    # METRICS (Fix: st.columns(3) biar gak error spec)
-    c1, c2, c3 = st.columns(3)
-    
-    # Filter koin dengan cara yang bener
-    btc = df[df['Koin'] == 'BTC']
-    eth = df[df['Koin'] == 'ETH']
-    sol = df[df['Koin'] == 'SOL']
-    
-    # FIX: Pake iloc bukan iloc['Harga']
-    if not btc.empty:
-        c1.metric("BTC/USDT", f"${btc.iloc['Harga']:,.2f}")
-    if not eth.empty:
-        c2.metric("ETH/USDT", f"${eth.iloc['Harga']:,.2f}")
-    if not sol.empty:
-        c3.metric("SOL/USDT", f"${sol.iloc['Harga']:,.2f}")
+    # METRICS SECTION (FIXED FOR PYTHON 3.14)
+    m_cols = st.columns(3)
+    top_3 = ["BTC", "ETH", "SOL"]
+    for i, sym in enumerate(top_3):
+        row = df[df['Koin'] == sym]
+        if not row.empty:
+            with m_cols[i]:
+                st.metric(label=f"{sym} / USDT", 
+                          value=f"${row.iloc['Harga']:,.2f}", 
+                          delta=f"{row.iloc['Change']:+.2f}%")
 
-    st.divider()
+    st.markdown("<div class='my-8'></div>", unsafe_allow_html=True)
 
-    # 6. TABEL MARKET
-    st.subheader("📊 Live Market Overview")
+    # 6. MARKET TABLE
+    st.markdown("<h2 class='text-xl font-bold text-slate-200 mb-4 px-2'>🔥 Top Volume Movers</h2>", unsafe_allow_html=True)
+    
+    # Styling DataFrame
     st.dataframe(
-        df.head(50), 
-        use_container_width=True, 
-        height=600,
+        df.head(50),
+        use_container_width=True,
+        height=500,
         hide_index=True
     )
     
-    # Tombol Back to Top (Manfaatin Smooth Scroll)
-    st.markdown("<div id='bottom'></div>", unsafe_allow_html=True)
-    st.markdown("<a href='#top' style='color:#00ffc8; text-decoration:none;'>↑ Back to Top</a>", unsafe_allow_html=True)
+    # FOOTER DENGAN TAILWIND
+    st.markdown("""
+        <div class="mt-12 text-center pb-10">
+            <a href="#top" class="text-emerald-500 hover:text-emerald-400 transition-colors text-sm font-bold tracking-widest uppercase">
+                ↑ Back to Top
+            </a>
+        </div>
+        """, unsafe_allow_html=True)
 
 else:
-    st.error("Gagal ambil data API. Coba lagi.")
+    st.error("Koneksi API Gagal. Sila Refresh.")
