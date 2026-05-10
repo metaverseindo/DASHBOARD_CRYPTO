@@ -10,14 +10,19 @@ import streamlit.components.v1 as components
 st.set_page_config(page_title="META INDO PRO", layout="wide", initial_sidebar_state="expanded")
 st_autorefresh(interval=30000, key="freshengine")
 
-# 2. BOOTSTRAP 5 & CLEAN CSS (FIXED CURLY BRACES)
-st.markdown("""
+# 2. CSS & BOOTSTRAP (DIPISAH SUPAYA GAK ERROR)
+# Gue pake r''' agar karakter spesial kayak backslash atau kurung kurawal gak dibaca error sama Python
+st.markdown(r'''
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
     header, footer, #MainMenu {visibility: hidden;}
     .stApp { background-color: #0b0e11; color: #eaecef; font-family: 'Inter', sans-serif; }
-    [data-testid="stSidebar"] { background-color: #1e2329; border-right: 1px solid #f0b90b; }
+    
+    /* Sidebar Area */
+    [data-testid="stSidebar"] { background-color: #1e2329; border-right: 2px solid #f0b90b; }
+    
+    /* Navbar Atas */
     .nav-bar-top {
         background-color: #1e2329;
         border-bottom: 2px solid #f0b90b;
@@ -26,34 +31,40 @@ st.markdown("""
         justify-content: space-between;
         align-items: center;
         margin-bottom: 25px;
-        border-radius: 8px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }
-    .brand-id { font-family: 'Orbitron', sans-serif; color: #f0b90b; font-weight: 900; font-size: 22px; }
+    .brand-id { font-family: 'Orbitron', sans-serif; color: #f0b90b; font-weight: 900; font-size: 24px; letter-spacing: 1px; }
+    
+    /* Card Design */
     .card-panel {
         background-color: #161a1e;
         border: 1px solid #2b3139;
-        border-radius: 12px;
+        border-radius: 15px;
         padding: 20px;
         margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
-    .dot-live { height: 8px; width: 8px; background-color: #02c076; border-radius: 50%; display: inline-block; margin-right: 5px; animation: blink 1s infinite; }
-    @keyframes blink { 50% { opacity: 0; } }
+    
+    /* Animasi Live Dot */
+    .dot-live { height: 10px; width: 10px; background-color: #02c076; border-radius: 50%; display: inline-block; margin-right: 8px; animation: blinker 1.5s infinite; }
+    @keyframes blinker { 50% { opacity: 0; } }
     </style>
-    """, unsafe_allow_html=True)
+    ''', unsafe_allow_html=True)
 
 # 3. SIDEBAR NAVIGATION
 with st.sidebar:
-    st.markdown('<div class="brand-id">META INDO</div>', unsafe_allow_html=True)
-    st.markdown("---")
+    st.markdown('<div class="brand-id" style="font-size: 20px;">META INDO</div>', unsafe_allow_html=True)
+    st.markdown("<hr style='border-color: #f0b90b;'>", unsafe_allow_html=True)
     nav_choice = st.radio(
         "NAVIGASI UTAMA",
         ["📊 Terminal Market", "🚀 Trading Hub", "⚙️ System Settings"],
         index=0
     )
     st.markdown("---")
-    st.caption("v.47 | Stable Build")
+    st.caption("v.48 | Stable Bootstrap 5")
 
-# 4. DATA ENGINE
+# 4. ENGINE DATA (SMART FETCH)
 @st.cache_data(ttl=20)
 def get_master_data():
     key = st.secrets.get("BINANCE_API_KEY", None)
@@ -83,53 +94,31 @@ def get_master_data():
         except: continue
     return pd.DataFrame([{"SYMBOL": "BTC", "PRICE": 0.0, "CHANGE": 0.0, "VOLUME 24H": "BUSY"}]), "🔴 BUSY"
 
-# 5. RENDER LOGIC
+# 5. RENDER CONTENT
 tz = pytz.timezone('Asia/Jakarta')
 time_now = datetime.now(tz).strftime("%H:%M:%S")
 
-# NAVBAR ATAS (Pake f-string yang sudah aman)
-st.markdown(f"""
+# NAVBAR RENDER (Gue taruh di luar if-else supaya gak bakal ilang)
+st.markdown(f'''
     <div class="nav-bar-top">
         <div class="brand-id">META INDO PRO</div>
         <div class="d-flex align-items-center">
             <span class="dot-live"></span>
-            <span style="color: #02c076; font-size: 13px; font-weight: bold; margin-right: 20px;">LIVE MARKET</span>
+            <span style="color: #02c076; font-size: 14px; font-weight: bold; margin-right: 20px;">LIVE MARKET</span>
             <span class="text-secondary" style="font-size: 13px;">{time_now} WIB</span>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    ''', unsafe_allow_html=True)
 
 if nav_choice == "📊 Terminal Market":
     df, net_status = get_master_data()
-    col_left, col_right = st.columns([1.2, 2.8])
+    col_left, col_right = st.columns([1.3, 2.7])
     
     with col_left:
         st.markdown('<div class="card-panel">', unsafe_allow_html=True)
-        st.write("##### 📊 Top Volume")
+        st.write("##### 📊 Top Market Volume")
         st.dataframe(df, use_container_width=True, hide_index=True, height=500)
         st.caption(f"Network: {net_status}")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    with col_right:
-        st.markdown('<div class="card-panel">', unsafe_allow_html=True)
-        st.write("##### 📈 Analysis")
-        tv_html = """
-        <div id="tv-chart" style="height:500px;"></div>
-        <script src="https://s3.tradingview.com/tv.js"></script>
-        <script>
-        new TradingView.widget({"autosize": true, "symbol": "BINANCE:BTCUSDT", "interval": "60", "theme": "dark", "style": "1", "locale": "en", "toolbar_bg": "#f1f3f6", "allow_symbol_change": true, "container_id": "tv-chart"});
-        </script>
-        """
-        components.html(tv_html, height=510)
-        st.markdown('</div>', unsafe_allow_html=True)
-
-elif nav_choice == "🚀 Trading Hub":
-    st.markdown('<div class="card-panel"><h3>🚀 Trading Hub</h3><p>Integrasi order sedang dikembangkan.</p></div>', unsafe_allow_html=True)
-
-elif nav_choice == "⚙️ System Settings":
-    st.markdown('<div class="card-panel"><h3>⚙️ Diagnostics</h3>', unsafe_allow_html=True)
-    if "BINANCE_API_KEY" in st.secrets:
-        st.success("API Key Active")
-    else:
-        st.warning("API Key Missing")
-    st.markdown('</div>', unsafe_allow_html=True)
+    with
