@@ -2,6 +2,11 @@ import streamlit as st
 import pandas as pd
 import requests
 import pytz
+# Cek apakah key kebaca (ini bakal muncul di layar app lu)
+if "BINANCE_API_KEY" in st.secrets:
+    st.write("✅ Sistem mendeteksi API Key di Secrets!")
+else:
+    st.write("❌ Sistem TIDAK menemukan API Key di Secrets.")
 from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
 
