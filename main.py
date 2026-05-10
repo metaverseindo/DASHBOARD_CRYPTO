@@ -51,12 +51,11 @@ st.markdown("""
     </div>
     """, unsafe_allow_html=True)
 
-# 5. TOMBOL REFRESH (FIXED: Kasih angka 2)
-col_btn = st.columns(2) 
-with col_btn:
-    if st.button("🔄 SYNC DATA SEKARANG"):
-        st.cache_data.clear()
-        st.rerun()
+# 5. TOMBOL REFRESH (Pake cara paling aman, gak pake 'with')
+col_btn = st.columns(3) 
+if col_btn.button("🔄 SYNC DATA SEKARANG"):
+    st.cache_data.clear()
+    st.rerun()
 
 # 6. ENGINE
 data = get_data()
@@ -64,19 +63,18 @@ data = get_data()
 if data:
     df = pd.DataFrame(data).sort_values("Vol", ascending=False)
     
-    # METRICS (FIXED: Kasih angka 3)
+    # METRICS (Pake indeks,, biar gak error)
     m_cols = st.columns(3)
     coins = ["BTC", "ETH", "SOL"]
     
     for i, sym in enumerate(coins):
         row = df[df['Koin'] == sym]
         if not row.empty:
-            with m_cols[i]:
-                st.metric(
-                    label=f"{sym} Market", 
-                    value=f"${row.iloc['Harga']:,.2f}", 
-                    delta=f"{row.iloc['Change']:+.2f}%"
-                )
+            m_cols[i].metric(
+                label=f"{sym} Market", 
+                value=f"${row.iloc['Harga']:,.2f}", 
+                delta=f"{row.iloc['Change']:+.2f}%"
+            )
 
     st.markdown("<div class='my-8 border-b border-slate-800'></div>", unsafe_allow_html=True)
 
