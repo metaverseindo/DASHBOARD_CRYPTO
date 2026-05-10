@@ -21,7 +21,7 @@ st.markdown(r'''
     .nav-bar-top {
         background-color: #0f172a; border-bottom: 2px solid #10b981;
         padding: 15px 25px; display: flex; justify-content: space-between;
-        align-items: center; margin-bottom: 25px; border-radius: 12px;
+        align-items: center; margin-bottom: 20px; border-radius: 12px;
         box-shadow: 0 4px 20px rgba(16, 185, 129, 0.2);
     }
     .brand-id { font-family: 'Orbitron', sans-serif; color: #10b981; font-weight: 900; font-size: 24px; }
@@ -37,28 +37,39 @@ with st.sidebar:
     st.markdown("<hr style='border-color: #10b981;'>", unsafe_allow_html=True)
     nav_choice = st.radio("NAVIGASI", ["📊 Terminal Market", "🚀 Trading Hub", "⚙️ System Settings"], index=0)
     st.markdown("---")
-    st.caption("v.54 | metaverseindo Edition")
+    st.caption("v.55 | Stable metaverseindo")
 
-# 4. DATA ENGINE
-@st.cache_data(ttl=20)
+# 4. DATA ENGINE (OPTIMIZED)
+@st.cache_data(ttl=15)
 def get_master_data():
-    endpoints = ["https://api.binance.com", "https://api1.binance.com"]
-    headers = {"User-Agent": "Mozilla/5.0"}
-    for base in endpoints:
-        try:
-            res = requests.get(f"{base}/api/v3/ticker/24hr", headers=headers, timeout=5)
-            if res.status_code == 200:
-                data = res.json()
-                rows = [{"SYMBOL": i['symbol'].replace('USDT',''), "PRICE": float(i['lastPrice']), "CHANGE": float(i['priceChangePercent']), "VOL": float(i['quoteVolume'])} for i in data if i.get('symbol','').endswith('USDT') and float(i.get('quoteVolume',0)) > 5000000]
-                df = pd.DataFrame(rows).sort_values("VOL", ascending=False).head(15)
-                return df.drop(columns=['VOL']), f"🟢 {base.split('//')}"
-        except: continue
-    return pd.DataFrame([{"SYMBOL": "BTC", "PRICE": 0.0, "CHANGE": 0.0}]), "🔴 BUSY"
+    # Coba endpoint ticker price yang lebih enteng kalau ticker 24h berat
+    try:
+        res = requests.get("https://api.binance.com/api/v3/ticker/24hr", timeout=10)
+        if res.status_code == 200:
+            data = res.json()
+            rows = []
+            for i in data:
+                symbol = i.get('symbol', '')
+                if symbol.endswith('USDT'):
+                    vol = float(i.get('quoteVolume', 0))
+                    if vol > 10000000: # Filter volume > 10jt USDT
+                        rows.append({
+                            "SYMBOL": symbol.replace('USDT',''),
+                            "PRICE": float(i['lastPrice']),
+                            "CHANGE": float(i['priceChangePercent']),
+                            "VOL": vol
+                        })
+            df = pd.DataFrame(rows).sort_values("VOL", ascending=False).head(15)
+            return df.drop(columns=['VOL']), "🟢 ONLINE"
+    except:
+        pass
+    return pd.DataFrame([{"SYMBOL": "BTC", "PRICE": 0.0, "CHANGE": 0.0}]), "🔴 DELAY"
 
 # 5. RENDER CONTENT
 tz = pytz.timezone('Asia/Jakarta')
 time_now = datetime.now(tz).strftime("%H:%M:%S")
 
+# Navbar
 st.markdown(f'''
     <div class="nav-bar-top">
         <div class="brand-id">metaverseindo</div>
@@ -72,17 +83,21 @@ st.markdown(f'''
 
 if nav_choice == "📊 Terminal Market":
     df, net_status = get_master_data()
+    
     col_l, col_r = st.columns([1.3, 2.7])
     with col_l:
         st.markdown('<div class="card-panel">', unsafe_allow_html=True)
-        st.write("##### 📊 Top Volume")
-        st.dataframe(df, use_container_width=True, hide_index=True, height=450)
-        st.caption(f"Status: {net_status}")
+        st.write("##### 📊 Top Volume (USDT)")
+        if df["PRICE"].sum() == 0:
+            st.warning("Data loading... Refreshing.")
+        else:
+            st.dataframe(df, use_container_width=True, hide_index=True, height=450)
+        st.caption(f"Network: {net_status}")
         st.markdown('</div>', unsafe_allow_html=True)
+
     with col_r:
         st.markdown('<div class="card-panel">', unsafe_allow_html=True)
-        st.write("##### 📈 Chart")
-        # TRADING VIEW - DIBUAT SATU BARIS BIAR GAK ERROR QUOTE
+        st.write("##### 📈 Live Chart")
         tv_html = '<div id="tv"></div><script src="https://s3.tradingview.com/tv.js"></script><script>new TradingView.widget({"autosize":true,"symbol":"BINANCE:BTCUSDT","interval":"60","theme":"dark","style":"1","locale":"en","container_id":"tv"});</script>'
         components.html(tv_html, height=460)
         st.markdown('</div>', unsafe_allow_html=True)
@@ -91,6 +106,4 @@ elif nav_choice == "🚀 Trading Hub":
     st.markdown('<div class="card-panel"><h3>🚀 Hub</h3><p>Syncing with metaverseindo wallet...</p></div>', unsafe_allow_html=True)
 
 elif nav_choice == "⚙️ System Settings":
-    st.markdown('<div class="card-panel"><h3>⚙️ Settings</h3>', unsafe_allow_html=True)
-    st.write("API Mode: Public")
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('<div class="card-panel"><h3>⚙️ System</h3><p>API Status: Public Mode</p></div>', unsafe_allow_html=True)
