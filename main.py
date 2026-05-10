@@ -6,11 +6,11 @@ import pytz
 from streamlit_autorefresh import st_autorefresh
 import streamlit.components.v1 as components
 
-# 1. SETUP WAJIB
+# 1. SETUP
 st.set_page_config(page_title="metaverseindo", layout="wide", initial_sidebar_state="collapsed")
 st_autorefresh(interval=30000, key="freshengine")
 
-# 2. CSS STABLE (Raw String)
+# 2. CSS CLEANUP (Hapus elemen gak penting & rapihin chart)
 st.markdown(r'''
 <style>
     header, footer, #MainMenu {visibility: hidden;}
@@ -24,6 +24,9 @@ st.markdown(r'''
     }
     .title-text { color: #10b981; font-weight: 800; font-size: 28px; margin: 0; }
     [data-testid="stMetric"] { background: #0f172a; border-left: 5px solid #10b981; padding: 10px !important; border-radius: 8px; }
+    
+    /* Menghilangkan margin berlebih di sekitar komponen HTML */
+    .element-container iframe { border-radius: 12px; }
 </style>
 ''', unsafe_allow_html=True)
 
@@ -52,19 +55,17 @@ df, btc_p, btc_c = get_data()
 tz = pytz.timezone('Asia/Jakarta')
 time_now = datetime.now(tz).strftime("%H:%M:%S")
 
-# --- FIX TOTAL BARIS 79 (Dikasih angka 2) ---
-col_head1, col_head2 = st.columns(2) 
-
-with col_head1:
+# HEADER - VERSI SUDAH DIHAPUS
+c1, c2 = st.columns(2) 
+with c1:
     st.markdown('<p class="title-text">METAVERSEINDO_</p>', unsafe_allow_html=True)
-    st.caption("v.83 | FINAL STABLE")
-
-with col_head2:
+    # Teks versi di bawah title dihapus (Kosong)
+with c2:
     st.markdown(f"<div style='text-align:right;color:#64748b;padding-top:10px;'>{time_now} WIB</div>", unsafe_allow_html=True)
 
 st.write("---")
 
-# --- FIX METRICS (Dikasih angka 4) ---
+# METRICS
 m1, m2, m3, m4 = st.columns(4)
 m1.metric("BTC", f"${btc_p:,.0f}", f"{btc_c}%")
 m2.metric("STATUS", "LIVE", "OK")
@@ -73,30 +74,40 @@ m4.metric("VOL", ">30M", "HIGH")
 
 st.write("")
 
-# --- FIX WORKSPACE (Dikasih List Rasio) ---
-left, right = st.columns([1, 1.5])
+# 5. WORKSPACE (Rasio Chart diperbesar jadi 2.0 supaya tulisan Volume gak numpuk)
+left, right = st.columns([1, 2.0])
 
 with left:
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     st.write("### 📊 Market")
-    st.dataframe(df, use_container_width=True, hide_index=True, height=400)
+    st.dataframe(df, use_container_width=True, hide_index=True, height=450)
     st.markdown('</div>', unsafe_allow_html=True)
 
 with right:
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     st.write("### 📈 Chart")
+    # Widget TradingView dengan ID baru
     chart_code = f'''
-    <div id="tv_v83"></div>
+    <div id="tv_v84"></div>
     <script src="https://s3.tradingview.com/tv.js"></script>
     <script>
     new TradingView.widget({{
-      "width": "100%", "height": 400, "symbol": "BINANCE:BTCUSDT",
-      "interval": "60", "theme": "dark", "style": "1", "locale": "en",
-      "container_id": "tv_v83", "allow_symbol_change": true
+      "width": "100%", 
+      "height": 450, 
+      "symbol": "BINANCE:BTCUSDT",
+      "interval": "60", 
+      "theme": "dark", 
+      "style": "1", 
+      "locale": "en",
+      "container_id": "tv_v84", 
+      "allow_symbol_change": true,
+      "enable_publishing": false,
+      "hide_top_toolbar": false,
+      "save_image": false
     }});
     </script>
     '''
-    components.html(chart_code, height=410)
+    components.html(chart_code, height=460)
     st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("<div style='text-align:center;color:#334155;font-size:10px;'>© 2026 METAVERSEINDO</div>", unsafe_allow_html=True)
+st.markdown("<div style='text-align:center;color:#334155;font-size:10px;margin-top:20px;'>© 2026 METAVERSEINDO</div>", unsafe_allow_html=True)
