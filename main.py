@@ -57,7 +57,7 @@ def fetch_crypto_data(ex_name):
 col_h1, col_h2 = st.columns(2) 
 with col_h1:
     st.title("📈 CRYPTO NEON")
-    st.caption(f"Source: {exchange_choice}")
+    st.caption(f"Source: {exchange_choice} API")
 with col_h2:
     if st.button("🔄 Force Refresh"):
         st.rerun()
@@ -79,8 +79,7 @@ if len(data) > 0:
 
     st.markdown("---")
 
-    # --- TABLE & CHART (FIXED: Baris 83 - st.columns()) ---
-    # Di sini letak perbaikannya, wajib ada parameter
+    # --- TABLE & CHART (FIXED: Baris 84 - Dikasih rasio) ---
     col_table, col_chart = st.columns()
     
     with col_table:
