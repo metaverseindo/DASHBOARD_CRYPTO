@@ -16,11 +16,12 @@ import ccxt
 
 def fetch_all_usdt_tickers():
     try:
-        # Kita pakai library CCXT biar lebih stabil tembus ke Binance
-exchange = ccxt.kucoin({'enableRateLimit': True})
+        # PENTING: Baris di bawah ini harus menjorok 4 spasi ke kanan
+        exchange = ccxt.kucoin({
+            'enableRateLimit': True,
+        })
         tickers = exchange.fetch_tickers()
         
-        # Filter hanya yang berakhiran USDT
         rows = []
         for symbol, t in tickers.items():
             if symbol.endswith('/USDT'):
