@@ -6,46 +6,55 @@ import pytz
 from streamlit_autorefresh import st_autorefresh
 import streamlit.components.v1 as components
 
-# 1. INITIAL SETUP
+# 1. CORE CONFIG
 st.set_page_config(page_title="metaverseindo", layout="wide", initial_sidebar_state="collapsed")
 st_autorefresh(interval=30000, key="freshengine")
 
-# 2. CSS STYLESHEET (CLEAN & HIDDEN)
+# 2. THE "AESTHETIC" CSS (Clean, Professional, Glassmorphism)
 st.markdown("""
     <style>
-    /* Sembunyikan elemen bawaan */
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Plus+Jakarta+Sans:wght@400;800&display=swap');
+
     header, footer, #MainMenu {visibility: hidden;}
-    .stApp { background-color: #020617; }
-    
-    /* Container Header */
-    .header-box {
-        background: linear-gradient(90deg, #0f172a 0%, #1e293b 100%);
-        border-bottom: 3px solid #10b981;
-        padding: 1.5rem;
-        border-radius: 15px;
-        text-align: center;
-        margin-bottom: 2rem;
+    .stApp { background-color: #05080f; color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; }
+
+    /* Glass Card Effect */
+    .glass-card {
+        background: rgba(23, 32, 53, 0.6);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        border-radius: 16px;
+        padding: 20px;
+        backdrop-filter: blur(10px);
+        margin-bottom: 15px;
     }
-    .brand-title {
-        font-family: 'Courier New', monospace;
+
+    .title-text {
+        font-family: 'JetBrains Mono', monospace;
         color: #10b981;
-        font-weight: 900;
+        font-weight: 800;
         font-size: 32px;
-        letter-spacing: 4px;
-        margin: 0;
+        letter-spacing: -1px;
+        margin-bottom: 0px;
+    }
+
+    /* Metric Styling */
+    [data-testid="stMetric"] {
+        background: rgba(15, 23, 42, 0.8);
+        border-left: 4px solid #10b981;
+        padding: 10px 15px;
+        border-radius: 8px;
     }
     
-    /* Dataframe Styling */
-    .stDataFrame {
-        border: 1px solid #334155;
-        border-radius: 10px;
-    }
+    [data-testid="stMetricValue"] { font-family: 'JetBrains Mono', monospace; font-size: 24px !important; }
+    
+    /* Dataframe perapihan */
+    .stDataFrame { border: none !important; }
     </style>
 """, unsafe_allow_html=True)
 
-# 3. DATA ENGINE
+# 3. FAST DATA ENGINE
 @st.cache_data(ttl=15)
-def fetch_data():
+def get_market_data():
     try:
         res = requests.get("https://api.binance.com/api/v3/ticker/24hr", timeout=5)
         data = res.json()
@@ -53,56 +62,69 @@ def fetch_data():
         
         coins = []
         for i in data:
-            if i['symbol'].endswith('USDT'):
-                vol = float(i.get('quoteVolume', 0))
-                if vol > 20000000: # Hanya koin dengan volume tinggi
-                    coins.append({
-                        "ASSET": i['symbol'].replace('USDT',''),
-                        "PRICE": f"{float(i['lastPrice']):,.2f}",
-                        "CHANGE": f"{float(i['priceChangePercent'])}%"
-                    })
-        return pd.DataFrame(coins).head(15), float(btc['lastPrice']), float(btc['priceChangePercent'])
+            if i['symbol'].endswith('USDT') and float(i.get('quoteVolume', 0)) > 30000000:
+                coins.append({
+                    "SYMBOL": i['symbol'].replace('USDT',''),
+                    "PRICE": f"{float(i['lastPrice']):,.2f}",
+                    "CHANGE": f"{float(i['priceChangePercent'])}%"
+                })
+        return pd.DataFrame(coins).head(12), float(btc['lastPrice']), float(btc['priceChangePercent'])
     except:
         return pd.DataFrame(), 0.0, 0.0
 
-# 4. RENDER HEADER
-st.markdown('<div class="header-box"><p class="brand-title">METAVERSEINDO</p></div>', unsafe_allow_html=True)
-
-# 5. DATA & METRICS
-df, btc_p, btc_c = fetch_data()
+# 4. TOP NAVIGATION
+df, btc_p, btc_c = get_market_data()
 tz = pytz.timezone('Asia/Jakarta')
 time_now = datetime.now(tz).strftime("%H:%M:%S")
 
-# Metrik Utama (Gunakan Native Streamlit agar Responsive)
-m1, m2, m3 = st.columns(3)
-m1.metric("BITCOIN", f"${btc_p:,.0f}", f"{btc_c}%")
-m2.metric("NETWORK", "ONLINE", delta_color="normal")
-m3.metric("TIME (WIB)", time_now)
+c_title, c_clock = st.columns()
+with c_title:
+    st.markdown('<p class="title-text">METAVERSEINDO_</p>', unsafe_allow_html=True)
+    st.caption("Terminal Data v.71 | Secure Connection Established")
 
-st.divider()
+with c_clock:
+    st.markdown(f"<div style='text-align: right; color: #64748b; font-family: JetBrains Mono; padding-top: 20px;'>{time_now} WIB</div>", unsafe_allow_html=True)
 
-# 6. MAIN CONTENT LAYOUT
-col_left, col_right = st.columns([1, 1.2])
+st.write("") # Spacer
+
+# 5. KEY METRICS
+m1, m2, m3, m4 = st.columns(4)
+m1.metric("BTC/USDT", f"${btc_p:,.0f}", f"{btc_c}%")
+m2.metric("STATUS", "STABLE", "100%")
+m3.metric("FEED", "BINANCE", "SPOT")
+m4.metric("VOL FILTER", "> 30M", "HIGH")
+
+st.write("") # Spacer
+
+# 6. MAIN WORKSPACE
+col_left, col_right = st.columns([1, 1.4])
 
 with col_left:
-    st.write("### 📊 Top Volume (USDT)")
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    st.write("### 📊 Market Snapshot")
     if not df.empty:
-        st.dataframe(df, use_container_width=True, hide_index=True, height=450)
+        st.dataframe(df, use_container_width=True, hide_index=True, height=480)
     else:
-        st.error("Data loading... please refresh.")
+        st.error("Data Synchronizing...")
+    st.markdown('</div>', unsafe_allow_html=True)
 
 with col_right:
-    st.write("### 📈 Live Chart")
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    st.write("### 📈 Technical Analysis")
     tv_widget = """
-    <div id="tv_main"></div>
-    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
-    <script type="text/javascript">
+    <div id="tv_pro"></div>
+    <script src="https://s3.tradingview.com/tv.js"></script>
+    <script>
     new TradingView.widget({
-      "width": "100%", "height": 450, "symbol": "BINANCE:BTCUSDT",
+      "width": "100%", "height": 480, "symbol": "BINANCE:BTCUSDT",
       "interval": "60", "theme": "dark", "style": "1", "locale": "en",
-      "toolbar_bg": "#f1f3f6", "enable_publishing": false,
-      "allow_symbol_change": true, "container_id": "tv_main"
+      "container_id": "tv_pro", "allow_symbol_change": true,
+      "hide_side_toolbar": false
     });
     </script>
     """
-    components.html(tv_widget, height=460)
+    components.html(tv_widget, height=490)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# 7. FOOTER
+st.markdown("<div style='text-align: center; color: #334155; font-size: 10px; margin-top: 50px;'>© 2026 METAVERSEINDO | TERMINAL ENCRYPTED</div>", unsafe_allow_html=True)
