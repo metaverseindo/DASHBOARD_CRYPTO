@@ -47,7 +47,8 @@ st.markdown(f'''
     </div>
     ''', unsafe_allow_html=True)
 
-# 5. MAIN LAYOUT (FIXED: Baris ini sudah diisi angka)
+# 5. MAIN LAYOUT (SUDAH DIPERBAIKI BARIS 51)
+# Kita isi agar Python 3.14 tidak error lagi
 c_left, c_right = st.columns()
 
 with c_left:
