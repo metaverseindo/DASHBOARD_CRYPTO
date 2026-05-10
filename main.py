@@ -22,7 +22,7 @@ def fetch_vvip_data():
     # CEK APAKAH KEY KEBACA DARI SECRETS
     key = st.secrets.get("BINANCE_API_KEY", None)
     
-    url = "https://api.binance.com/api/v3/ticker/24hr"
+    url = "https://api1.binance.com/api/v3/ticker/24hr"
     headers = {"User-Agent": "Mozilla/5.0"}
     
     if key:
