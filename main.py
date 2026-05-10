@@ -75,14 +75,27 @@ if data:
 
     st.divider()
 
-    # 7. TABLE
+    # 7. TABLE DENGAN FORMATAING PERSEN %
     st.markdown("<h2 class='text-xl font-bold text-slate-200 mb-4 px-2'>📊 Market Movement</h2>", unsafe_allow_html=True)
-    st.dataframe(df.head(50), use_container_width=True, height=550, hide_index=True)
+    
+    # Kita pake column_config biar lebih canggih
+    st.data_editor(
+        df.head(50),
+        column_config={
+            "Harga": st.column_config.NumberColumn("Harga ($)", format="$%.4f"),
+            "Vol": st.column_config.NumberColumn("Volume 24h", format="$%.0f"),
+            "Change": st.column_config.NumberColumn(
+                "Change (%)",
+                format="%.2f%%", # INI YANG BIKIN ADA SIMBOL %
+            )
+        },
+        use_container_width=True,
+        height=550,
+        hide_index=True,
+        disabled=True # Biar gak bisa diedit, cuma buat pamer data
+    )
     
     # --- BAGIAN FIX JAM WIB ---
     tz_jakarta = pytz.timezone('Asia/Jakarta')
     waktu_sekarang = datetime.now(tz_jakarta).strftime('%H:%M:%S')
     st.caption(f"Last sync: {waktu_sekarang} WIB (Waktu Indonesia Barat)")
-
-else:
-    st.warning("Data belum masuk. Klik Sync Data.")
