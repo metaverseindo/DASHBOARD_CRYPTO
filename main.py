@@ -29,7 +29,6 @@ st.markdown("""
         border: 1px solid #deff9a;
         border-radius: 10px;
     }
-    /* Menghilangkan footer streamlit */
     footer {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
@@ -55,7 +54,6 @@ def fetch_crypto_data(ex_name):
         
         rows = []
         for symbol, t in tickers.items():
-            # Kita hanya ambil pair USDT (format CCXT: BTC/USDT)
             if '/USDT' in symbol:
                 rows.append({
                     "Koin": symbol.split('/'),
@@ -83,13 +81,12 @@ with col_h2:
 with st.spinner("🚀 Sinkronisasi dengan Blockchain..."):
     data = fetch_crypto_data(exchange_choice)
 
-# Cek apakah data tersedia sebelum menampilkan dashboard
+# Cek apakah data tersedia
 if len(data) > 0:
     df = pd.DataFrame(data)
-    # Urutkan berdasarkan volume transaksi terbesar
     df = df.sort_values("Volume", ascending=False).reset_index(drop=True)
 
-    # --- TOP 3 METRICS (BTC, ETH, SOL) ---
+    # --- TOP 3 METRICS ---
     top_symbols = ["BTC", "ETH", "SOL"]
     m_cols = st.columns(3)
     
@@ -108,7 +105,7 @@ if len(data) > 0:
 
     st.markdown("---")
 
-    # --- LAYOUT: TABLE (KIRI) & CHART (KANAN) ---
+    # --- LAYOUT: TABLE & CHART ---
     col_table, col_chart = st.columns()
 
     with col_table:
@@ -118,9 +115,8 @@ if len(data) > 0:
         if search:
             df_display = df[df['Koin'].str.contains(search)]
         else:
-            df_display = df.head(50) # Tampilkan 50 koin paling ramai
+            df_display = df.head(50)
 
-        # Fungsi warna untuk kolom Change
         def color_change(val):
             color = '#deff9a' if val >= 0 else '#ff4b4b'
             return f'color: {color}; font-weight: bold'
@@ -143,7 +139,7 @@ if len(data) > 0:
             x=top_10['Volume'],
             y=top_10['Koin'],
             orientation='h',
-            marker=dict(color='#deff9a', line=dict(color='#deff9a', width=1))
+            marker=dict(color='#deff9a')
         ))
         fig.update_layout(
             paper_bgcolor='rgba(0,0,0,0)',
@@ -155,9 +151,16 @@ if len(data) > 0:
         )
         st.plotly_chart(fig, use_container_width=True)
 
-    # Info terakhir sinkronisasi
     st.markdown("---")
-    st.caption(f"🕒 Terakhir diperbarui: {datetime.now().strftime('%d %b %Y, %H:%M:%S')} | Total koin aktif: {len(df)}")
+    st.caption(f"🕒 Terakhir diperbarui: {datetime.now().strftime('%H:%M:%S')} | Total koin aktif: {len(df)}")
 
 else:
-    # Blok ini jalan
+    # --- BARIS DI BAWAH INI HARUS MENJOROK (Indentasi) ---
+    st.warning("⚠️ Menunggu data dari Exchange... Pastikan koneksi stabil.")
+    st.info("Jika error berlanjut, coba ganti Exchange ke KuCoin melalui Sidebar.")
+
+# --- 7. AUTO REFRESH ---
+if auto_refresh:
+    import time
+    time.sleep(30)
+    st.rerun()
