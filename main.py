@@ -50,27 +50,27 @@ def fetch_crypto_data(ex_name):
                 })
         return rows
     except Exception as e:
-        st.error(f"Error fetching data: {e}")
+        st.error(f"Error: {e}")
         return []
 
-# --- 5. HEADER (FIXED: st.columns(2)) ---
+# --- 5. HEADER (FIXED: Dikasih angka 2) ---
 col_h1, col_h2 = st.columns(2) 
 with col_h1:
     st.title("📈 CRYPTO NEON")
-    st.caption(f"Source: {exchange_choice} API | Final Stable 3.14")
+    st.caption(f"Source: {exchange_choice} | Python 3.14 Stable")
 with col_h2:
     if st.button("🔄 Force Refresh"):
         st.rerun()
 
 # --- 6. MAIN ENGINE ---
-with st.spinner("🚀 Syncing with Blockchain..."):
+with st.spinner("🚀 Syncing..."):
     data = fetch_crypto_data(exchange_choice)
 
 if len(data) > 0:
     df = pd.DataFrame(data)
     df = df.sort_values("Volume", ascending=False).reset_index(drop=True)
 
-    # --- TOP METRICS (FIXED: st.columns(3)) ---
+    # --- TOP METRICS (FIXED: Dikasih angka 3) ---
     m_cols = st.columns(3)
     for i, sym in enumerate(["BTC", "ETH", "SOL"]):
         row = df[df['Koin'] == sym]
@@ -83,7 +83,7 @@ if len(data) > 0:
 
     st.markdown("---")
 
-    # --- TABLE & CHART (FIXED BARIS 88: st.columns()) ---
+    # --- TABLE & CHART (FIXED: Baris 87 lu sekarang ada isinya!) ---
     col_table, col_chart = st.columns()
     
     with col_table:
@@ -127,7 +127,7 @@ if len(data) > 0:
     st.caption(f"Last sync: {datetime.now().strftime('%H:%M:%S')}")
 
 else:
-    st.warning("⚠️ Data gagal ditarik. Silakan ganti exchange di sidebar.")
+    st.warning("⚠️ Gagal narik data. Coba ganti exchange di sidebar.")
 
 # --- 7. AUTO REFRESH ---
 if auto_refresh:
