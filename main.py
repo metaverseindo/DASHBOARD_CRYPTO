@@ -4,97 +4,45 @@ import ccxt
 import plotly.graph_objects as go
 from datetime import datetime
 
-# --- 1. CONFIG DASHBOARD ---
-st.set_page_config(
-    page_title="Crypto Neon Dashboard",
-    page_icon="⚡",
-    layout="wide",
-)
+# 1. CONFIG
+st.set_page_config(page_title="Crypto Neon", layout="wide")
 
-# --- 2. CUSTOM CSS ---
-st.markdown("""
-    <style>
-    .stApp { background-color: #0e1117; }
-    [data-testid="stMetricValue"] { color: #deff9a !important; font-family: 'Courier New', monospace; font-weight: bold; }
-    div.element-container { color: #f5f5f5; }
-    .stDataFrame { border: 1px solid #deff9a; border-radius: 10px; }
-    footer {visibility: hidden;}
-    </style>
-    """, unsafe_allow_html=True)
-
-# --- 3. SIDEBAR ---
-with st.sidebar:
-    st.title("⚡ Settings 2.0")
-    st.markdown("---")
-    exchange_choice = st.selectbox("Pilih Exchange:", ["KuCoin", "Binance"])
-    auto_refresh = st.toggle("Auto-refresh (30s)", value=True)
-    st.markdown("---")
-
-# --- 4. DATA FETCHING ---
-def fetch_crypto_data(ex_name):
+# 2. DATA
+def get_data():
     try:
-        exchange = ccxt.kucoin() if ex_name == "KuCoin" else ccxt.binance()
-        tickers = exchange.fetch_tickers()
-        rows = []
-        for symbol, t in tickers.items():
-            if '/USDT' in symbol:
-                rows.append({
-                    "Koin": symbol.split('/'),
-                    "Harga": t['last'],
-                    "Change": t['percentage'] if t['percentage'] is not None else 0.0,
-                    "Volume": t['quoteVolume']
-                })
-        return rows
-    except Exception as e:
-        st.error(f"Error: {e}")
-        return []
+        ex = ccxt.kucoin()
+        t = ex.fetch_tickers()
+        return [{"Koin": s.split('/'), "Harga": v['last'], "Change": v['percentage'] or 0.0, "Vol": v['quoteVolume']} 
+                for s, v in t.items() if '/USDT' in s]
+    except: return []
 
-# --- 5. HEADER (FIXED) ---
-col_h1, col_h2 = st.columns() # BARIS 57: SUDAH ADA PARAMETER
-with col_h1:
+# 3. HEADER - PERHATIKAN ANGKA 2 DI DALAM KURUNG
+c1, c2 = st.columns(2) 
+with c1:
     st.title("📈 CRYPTO NEON")
-    st.caption(f"Source: {exchange_choice} | Python 3.14 Version")
-with col_h2:
-    if st.button("🔄 Force Refresh"):
-        st.rerun()
+with c2:
+    if st.button("🔄 Refresh"): st.rerun()
 
-# --- 6. MAIN ENGINE ---
-data = fetch_crypto_data(exchange_choice)
-
-if len(data) > 0:
-    df = pd.DataFrame(data)
-    df = df.sort_values("Volume", ascending=False).reset_index(drop=True)
-
-    # METRICS (FIXED)
-    m_cols = st.columns(3) # BARIS 74: SUDAH ADA PARAMETER
-    for i, sym in enumerate(["BTC", "ETH", "SOL"]):
+# 4. ENGINE
+data = get_data()
+if data:
+    df = pd.DataFrame(data).sort_values("Vol", ascending=False)
+    
+    # METRICS - PERHATIKAN ANGKA 3 DI DALAM KURUNG
+    m = st.columns(3)
+    coins = ["BTC", "ETH", "SOL"]
+    for i, sym in enumerate(coins):
         row = df[df['Koin'] == sym]
         if not row.empty:
-            m_cols[i].metric(label=f"{sym}/USDT", value=f"${row.iloc['Harga']:,.2f}", delta=f"{row.iloc['Change']:+.2f}%")
+            m[i].metric(sym, f"${row.iloc['Harga']}", f"{row.iloc['Change']}%")
 
-    st.markdown("---")
+    st.divider()
 
-    # --- TABLE & CHART (BARIS 90: WAJIB ADA ANGKA!) ---
-    # INI BARIS YANG ERROR DI LOG LU: SEKARANG GUE ISI
-    col_table, col_chart = st.columns() # <--- JANGAN DIHAPUS ANGKA NYA!
-    
-    with col_table:
-        st.subheader("📊 Market Overview")
-        search = st.text_input("🔍 Search Coin...", "").upper()
-        df_display = df[df['Koin'].str.contains(search)] if search else df.head(50)
-        st.dataframe(df_display, use_container_width=True, height=450, hide_index=True)
-
-    with col_chart:
-        st.subheader("🔥 Top 10 Vol")
-        top_10 = df.head(10)
-        fig = go.Figure(go.Bar(x=top_10['Volume'], y=top_10['Koin'], orientation='h', marker=dict(color='#deff9a')))
-        fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white', height=450, yaxis=dict(autorange="reversed"))
+    # TABLE & CHART - PERHATIKAN LIST DI DALAM KURUNG
+    left, right = st.columns()
+    with left:
+        st.dataframe(df.head(20), use_container_width=True)
+    with right:
+        top10 = df.head(10)
+        fig = go.Figure(go.Bar(x=top10['Vol'], y=top10['Koin'], orientation='h'))
         st.plotly_chart(fig, use_container_width=True)
-
-    st.caption(f"Last sync: {datetime.now().strftime('%H:%M:%S')}")
-
-# --- 7. AUTO REFRESH ---
-if auto_refresh:
-    import time
-    time.sleep(30)
-    st.rerun()
