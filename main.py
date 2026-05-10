@@ -108,6 +108,7 @@ if len(data) > 0:
 
     # --- LAYOUT: TABLE & CHART ---
     col_table, col_chart = st.columns()
+    col_table, col_chart = st.columns(2)
 
     with col_table:
         st.subheader("📊 Market Overview")
