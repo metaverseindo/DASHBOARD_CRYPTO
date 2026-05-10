@@ -6,125 +6,106 @@ import pytz
 from streamlit_autorefresh import st_autorefresh
 
 # 1. CONFIG
-st.set_page_config(page_title="META INDO", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="META INDO PRO", layout="wide", initial_sidebar_state="collapsed")
+st_autorefresh(interval=15000, key="datarefresh")
 
-# 2. AUTO-REFRESH (Refresh tiap 10 detik)
-st_autorefresh(interval=10000, key="datarefresh")
-
-# 3. STYLE & UI CUSTOMIZATION
+# 2. CSS CUSTOM (DARK MODE TERMINAL)
 st.markdown("""
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
     header, footer, #MainMenu {visibility: hidden;}
-    .stApp { background-color: #020617; }
+    .stApp { background-color: #030712; }
     
-    /* Perbaikan: Rata Kanan untuk angka & Monospace agar titik sejajar */
+    /* Style Table */
     [data-testid="stDataFrame"] td { 
-        text-align: right !important; 
-        font-family: 'ui-monospace', monospace !important; 
+        vertical-align: middle !important; 
+        font-family: 'Inter', sans-serif !important;
     }
     
-    .glow-text { text-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+    /* Header Animation */
+    .glow-header {
+        color: #10b981;
+        text-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+        font-weight: 900;
+        letter-spacing: -1px;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-# 4. DATA ENGINE (Update: Menambahkan Kolom No)
-@st.cache_data(ttl=9)
-def get_crypto_data():
+# 3. DATA ENGINE (AMBIL LOGO & SPARKLINE)
+@st.cache_data(ttl=14)
+def get_pro_data():
     try:
-        ex = ccxt.kucoin({'enableRateLimit': True})
-        t = ex.fetch_tickers()
+        ex = ccxt.kucoin()
+        tickers = ex.fetch_tickers()
         rows = []
-        for s, v in t.items():
-            if '/USDT' in s:
+        for symbol, v in tickers.items():
+            if '/USDT' in symbol:
+                coin_name = symbol.split('/')
+                # Link Logo (Pake CDN koin yang stabil)
+                logo_url = f"https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/{coin_name.lower()}.png"
+                
                 rows.append({
-                    "Koin": s.split('/'),
+                    "Koin": coin_name,
+                    "Logo": logo_url,
                     "Harga": v['last'],
+                    "Change": v['percentage'] or 0.0,
                     "Vol": v['quoteVolume'],
-                    "Change": v['percentage'] or 0.0
+                    # Simulasi data grafik (Streamlit butuh list angka buat Sparkline)
+                    "Trend": [v['last'] * (1 + (v['percentage'] or 0)/100 * (i/10)) for i in range(10)]
                 })
         
-        # Sort by Volume & Ambil Top 50
         df_res = pd.DataFrame(rows).sort_values("Vol", ascending=False).head(50)
-        
-        # INSERT KOLOM NOMOR DI AWAL
         df_res.insert(0, "No", range(1, len(df_res) + 1))
-        
         return df_res
-    except:
-        return pd.DataFrame()
+    except: return pd.DataFrame()
 
-# 5. HEADER
+# 4. UI LAYOUT
 st.markdown("""
-    <div class="flex justify-between items-center bg-slate-900/80 p-6 rounded-2xl border border-slate-800 mb-6">
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px; background: #111827; border-radius: 15px; border: 1px solid #1f2937; margin-bottom: 25px;">
         <div>
-            <h1 class="text-4xl font-black text-emerald-400 tracking-tighter glow-text">📊 META INDO</h1>
-            <p class="text-slate-400 text-sm font-medium uppercase tracking-widest">Live Market Pulse</p>
+            <h1 class="glow-header" style="font-size: 35px; margin: 0;">📊 META INDO <span style="color:white">PRO</span></h1>
+            <p style="color: #9ca3af; margin: 0; font-size: 12px; font-family: monospace;">INSTANT ORDERBOOK & MARKET ANALYSIS</p>
         </div>
-        <div class="flex items-center gap-3 bg-slate-800/50 px-4 py-2 rounded-full border border-slate-700">
-            <span class="relative flex h-3 w-3">
-              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-            </span>
-            <p class="text-emerald-500 font-mono text-xs font-bold">LIVE FEED</p>
+        <div style="text-align: right;">
+            <div style="color: #10b981; font-weight: bold; font-family: monospace;">● LIVE SERVER</div>
+            <div style="color: #4b5563; font-size: 10px;">DATA SOURCE: KUCOIN GLOBAL</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-df = get_crypto_data()
+df = get_pro_data()
 
 if not df.empty:
-    # 6. METRICS (BTC, ETH, SOL)
-    m1, m2, m3 = st.columns(3)
-    for i, sym in enumerate(["BTC", "ETH", "SOL"]):
-        row = df[df['Koin'] == sym]
-        if not row.empty:
-            [m1, m2, m3][i].metric(f"{sym}/USDT", f"${row.iloc['Harga']:,.2f}", f"{row.iloc['Change']:+.2f}%")
-
-    st.markdown("<div class='my-6 border-b border-slate-800'></div>", unsafe_allow_html=True)
-
-   # 7. MAIN TABLE (FIX: NAMA KOIN TEGAS & LEBAR PAS)
-    st.markdown("<h2 class='text-xl font-bold text-slate-200 mb-4 px-2'>📊 Market Movement</h2>", unsafe_allow_html=True)
-
-    def style_rows(row):
-        change_color = '#10b981' if row['Change'] >= 0 else '#ef4444'
-        styles = []
-        for name in row.index:
-            if name == 'Koin':
-                # Nama koin dibuat PUTIH TERANG & BOLD
-                styles.append('color: #ffffff; font-weight: 900; text-transform: uppercase;')
-            elif name == 'Change':
-                styles.append(f'color: {change_color}; font-weight: 800;')
-            elif name == 'No':
-                styles.append('color: #64748b; text-align: center;')
-            else:
-                styles.append('color: #cbd5e1;')
-        return styles
-
-    styled_df = df.style.format({
-        "No": "{:02d}",
-        "Harga": "${:,.4f}",
-        "Vol": "{:,.0f}",
-        "Change": "{:+.2f}%"
-    }).apply(style_rows, axis=1)
-
-    # SETTING LEBAR YANG IDEAL
+    # 5. MAIN PRO TABLE
     st.dataframe(
-        styled_df,
-        use_container_width=True, 
-        height=650, 
-        hide_index=True,
+        df,
         column_config={
-            "No": st.column_config.TextColumn("No", width="small"),
-            "Koin": st.column_config.TextColumn("COIN NAME", width="small"), # Dikecilin biar pas
-            "Harga": st.column_config.TextColumn("PRICE ($)", width="medium"),
-            "Vol": st.column_config.TextColumn("24H VOLUME", width="large"), # Volume paling lebar
-            "Change": st.column_config.TextColumn("CHANGE (%)", width="small")
-        }
+            "No": st.column_config.NumberColumn("RANK", width=50),
+            "Logo": st.column_config.ImageColumn("ICON", width=50),
+            "Koin": st.column_config.TextColumn("SYMBOL", width=80),
+            "Harga": st.column_config.NumberColumn("PRICE ($)", format="$%.4f", width=120),
+            "Change": st.column_config.NumberColumn("24H %", format="%.2f%%", width=100),
+            "Vol": st.column_config.NumberColumn("VOLUME", format="$%d", width=150),
+            "Trend": st.column_config.LineChartColumn(
+                "MARKET TREND (24H)",
+                width=200,
+                y_min=df["Harga"].min(),
+                y_max=df["Harga"].max()
+            )
+        },
+        use_container_width=True,
+        hide_index=True,
+        height=700
     )
-    
-    # 8. FOOTER
+
+    # 6. FOOTER WIB
     tz = pytz.timezone('Asia/Jakarta')
-    st.markdown(f'<p class="text-slate-500 text-xs font-mono mt-4">ID: {datetime.now(tz).strftime("%H:%M:%S")} WIB | Auto-Refresh: 10s</p>', unsafe_allow_html=True)
+    now = datetime.now(tz).strftime("%H:%M:%S")
+    st.markdown(f"""
+        <div style="display: flex; justify-content: space-between; margin-top: 15px; color: #4b5563; font-size: 12px; font-family: monospace;">
+            <span>SYSTEM TIME: {now} WIB</span>
+            <span>REFRESH RATE: 15S</span>
+        </div>
+    """, unsafe_allow_html=True)
 else:
-    st.error("API Error. Memperbaiki koneksi...")
+    st.warning("Menghubungkan ke API... Pastikan koneksi internet stabil.")
