@@ -9,7 +9,7 @@ from streamlit_autorefresh import st_autorefresh
 st.set_page_config(page_title="META INDO PRO", layout="wide", initial_sidebar_state="collapsed")
 st_autorefresh(interval=15000, key="datarefresh")
 
-# 2. CSS TERMINAL (CLEAN & PRO)
+# 2. CSS TERMINAL (DARK & TIGHT)
 st.markdown("""
     <style>
     header, footer, #MainMenu {visibility: hidden;}
@@ -20,7 +20,7 @@ st.markdown("""
         font-weight: 900;
     }
     /* Rapiin tabel agar icon dan chart pas di tengah baris */
-    [data-testid="stDataFrame"] td { vertical-align: middle !important; }
+    [data-testid="stDataFrame"] td { vertical-align: middle !important; font-family: 'ui-monospace', monospace !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -28,7 +28,7 @@ st.markdown("""
 @st.cache_data(ttl=10)
 def fetch_market_data():
     try:
-        # Pake KuCoin dengan timeout lebih panjang
+        # Hubungkan ke KuCoin
         ex = ccxt.kucoin({'timeout': 20000})
         tickers = ex.fetch_tickers()
         data_list = []
@@ -37,15 +37,14 @@ def fetch_market_data():
             if '/USDT' in sym and v['last'] is not None and v['quoteVolume'] > 0:
                 coin = sym.split('/')
                 
-                # Setup Sparkline (Trend) yang ringan
+                # Setup Sparkline yang super enteng (6 titik data)
                 p = float(v['last'])
                 c = float(v['percentage'] or 0.0)
-                # Bikin 7 titik data biar enteng di-render
-                sparkline = [p * (1 + (c / 100) * (i / 6)) for i in range(7)]
+                sparkline = [p * (1 + (c / 100) * (i / 5)) for i in range(6)]
                 
                 data_list.append({
                     "No": 0,
-                    "Icon": f"https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/32/color/{coin.lower()}.png",
+                    "Logo": f"https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/32/color/{coin.lower()}.png",
                     "SYMBOL": coin,
                     "PRICE": p,
                     "CHANGE": c,
@@ -53,11 +52,11 @@ def fetch_market_data():
                     "TREND": sparkline
                 })
         
-        # Sort & Ambil Top 50
+        # Sort by Volume & Ambil Top 50
         df = pd.DataFrame(data_list).sort_values("VOLUME", ascending=False).head(50)
         df["No"] = range(1, len(df) + 1)
         return df
-    except Exception as e:
+    except:
         return pd.DataFrame()
 
 # 4. HEADER
@@ -65,7 +64,7 @@ st.markdown("""
     <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px; background: #0f172a; border-radius: 15px; border: 1px solid #1e293b; margin-bottom: 20px;">
         <div>
             <h1 class="glow-text" style="font-size: 28px; margin: 0;">📊 META INDO PRO</h1>
-            <p style="color: #64748b; margin: 0; font-size: 11px; font-family: monospace;">REAL-TIME MARKET INTELLIGENCE</p>
+            <p style="color: #64748b; margin: 0; font-size: 11px; font-family: monospace;">BLOCKCHAIN TERMINAL v2.5</p>
         </div>
         <div style="text-align: right; color: #10b981; font-weight: bold; font-family: monospace; font-size: 12px;">
             ● TERMINAL ONLINE
@@ -81,7 +80,7 @@ if not df.empty:
         df,
         column_config={
             "No": st.column_config.NumberColumn("RANK", width=40),
-            "Icon": st.column_config.ImageColumn(" ", width=40),
+            "Logo": st.column_config.ImageColumn(" ", width=40),
             "SYMBOL": st.column_config.TextColumn("COIN", width=80),
             "PRICE": st.column_config.NumberColumn("PRICE (USDT)", format="$%.4f", width=120),
             "CHANGE": st.column_config.NumberColumn("24H %", format="%+.2f%%", width=100),
@@ -97,4 +96,4 @@ if not df.empty:
     tz = pytz.timezone('Asia/Jakarta')
     st.caption(f"Last Sync: {datetime.now(tz).strftime('%H:%M:%S')} WIB | Auto-refresh active")
 else:
-    st.info("🔄 Connecting to server... Jika data tidak muncul dalam 10 detik, silakan refresh halaman.")
+    st.warning("🔄 Connecting to market... Klik refresh di browser jika dalam 10 detik belum muncul.")
