@@ -69,9 +69,7 @@ def fetch_crypto_data(ex_name):
         return []
 
 # --- 5. HEADER DASHBOARD ---
-col_h1, col_h2 = st.columns()
 col_h1, col_h2 = st.columns(2)
-col_h1, col_h2 = st.columns()
 
 with col_h1:
     st.title("📈 CRYPTO NEON DASHBOARD")
