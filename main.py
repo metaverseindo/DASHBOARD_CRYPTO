@@ -10,7 +10,7 @@ import streamlit.components.v1 as components
 st.set_page_config(page_title="metaverseindo", layout="wide", initial_sidebar_state="expanded")
 st_autorefresh(interval=30000, key="freshengine")
 
-# 2. CSS CUSTOM (NO LEAKING TEXT)
+# 2. CSS CUSTOM (STABLE & SECURE)
 st.markdown(r'''
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
@@ -44,32 +44,44 @@ def get_crypto_data():
             rows = [{"SYMBOL": i['symbol'].replace('USDT',''), "PRICE": float(i['lastPrice']), "CHANGE": float(i['priceChangePercent']), "VOL": float(i.get('quoteVolume',0))} 
                     for i in data if i.get('symbol','').endswith('USDT') and float(i.get('quoteVolume',0)) > 5000000]
             df = pd.DataFrame(rows).sort_values("VOL", ascending=False).head(10)
-            return df.drop(columns=['VOL']), btc_p, "🟢 ONLINE"
+            return df.drop(columns=['VOL']), btc_p, "ONLINE"
     except: pass
-    return pd.DataFrame(), 0, "🔴 RECONNECT"
+    return pd.DataFrame(), 0, "RECONNECT"
 
 # 4. SIDEBAR & NAVBAR
 with st.sidebar:
     st.markdown('<div class="brand-id">metaverseindo</div>', unsafe_allow_html=True)
-    nav = st.radio("MENU", ["📊 Market", "🚀 Hub"])
+    nav = st.radio("MENU", ["Market", "Hub"])
 
 tz = pytz.timezone('Asia/Jakarta')
 time_now = datetime.now(tz).strftime("%H:%M")
 st.markdown(f'''<div class="nav-bar-top"><div class="brand-id">metaverseindo</div><div style="font-size:12px;color:#10b981;">● {time_now} WIB</div></div>''', unsafe_allow_html=True)
 
 # 5. MAIN CONTENT
-if nav == "📊 Market":
+if nav == "Market":
     df, btc_p, net_status = get_crypto_data()
 
     # METRICS AREA
     m1, m2, m3 = st.columns(3)
     m1.markdown(f'<div class="card-panel" style="text-align:center;"><h6>BTC PRICE</h6><h4 style="color:#10b981;">${btc_p:,.0f}</h4></div>', unsafe_allow_html=True)
     m2.markdown(f'<div class="card-panel" style="text-align:center;"><h6>NETWORK</h6><h4 style="color:#10b981;">{net_status}</h4></div>', unsafe_allow_html=True)
-    m3.markdown(f'<div class="card-panel" style="text-align:center;"><h6>MARKET TYPE</h6><h4 style="color:#10b981;">SPOT</h4></div>', unsafe_allow_html=True)
+    m3.markdown(f'<div class="card-panel" style="text-align:center;"><h6>TYPE</h6><h4 style="color:#10b981;">SPOT</h4></div>', unsafe_allow_html=True)
 
-    # BARIS 71: FIX (Wajib isi angka dalam kurung)
+    # TWO COLUMNS LAYOUT
     col_left, col_right = st.columns(2)
     
     with col_left:
         st.markdown('<div class="card-panel">', unsafe_allow_html=True)
-        st.write("##### 📊
+        st.write("##### Top 10 Volume")
+        if not df.empty:
+            st.dataframe(df, use_container_width=True, hide_index=True)
+        else:
+            st.warning("Loading...")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with col_right:
+        st.markdown('<div class="card-panel">', unsafe_allow_html=True)
+        st.write("##### Live Chart")
+        tv_html = '<div id="tv" style="height:300px;"></div><script src="https://s3.tradingview.com/tv.js"></script><script>new TradingView.widget({"autosize":true,"symbol":"BINANCE:BTCUSDT","interval":"60","theme":"dark","style":"1","locale":"en","container_id":"tv"});</script>'
+        components.html(tv_html, height=310)
+        st.markdown('</div>', unsafe_allow_html=True)
