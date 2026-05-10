@@ -79,7 +79,7 @@ if len(data) > 0:
 
     st.markdown("---")
 
-    # --- TABLE & CHART (FIXED: Baris 86 - st.columns()) ---
+    # --- TABLE & CHART (FIXED: Baris 83 - st.columns()) ---
     col_table, col_chart = st.columns()
     
     with col_table:
