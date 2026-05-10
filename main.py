@@ -67,11 +67,12 @@ def fetch_phantom_data():
         except:
             continue
             
-    # --- JALUR TERAKHIR: DATA STANDBY (FIXED SYNTAX) ---
+    # --- JALUR TERAKHIR: DATA STANDBY (FIXED TREND VALUES) ---
     mock_data = [
         {"RANK": 1, "ICON": "https://www.google.com/s2/favicons?domain=bitcoin.org", "SYMBOL": "BTC", "PRICE": 65432.10, "CHANGE": 1.5, "VOLUME 24H": "$ 32,450,120,000", "TREND":},
         {"RANK": 2, "ICON": "https://www.google.com/s2/favicons?domain=ethereum.org", "SYMBOL": "ETH", "PRICE": 3456.78, "CHANGE": -0.8, "VOLUME 24H": "$ 15,200,450,000", "TREND":},
-        {"RANK": 3, "ICON": "https://www.google.com/s2/favicons?domain=solana.com", "SYMBOL": "SOL", "PRICE": 145.50, "CHANGE": 4.2, "VOLUME 24H": "$ 5,100,200,000", "TREND":}
+        {"RANK": 3, "ICON": "https://www.google.com/s2/favicons?domain=solana.com", "SYMBOL": "SOL", "PRICE": 145.50, "CHANGE": 4.2, "VOLUME 24H": "$ 5,100,200,000", "TREND":},
+        {"RANK": 4, "ICON": "https://www.google.com/s2/favicons?domain=bnbchain.org", "SYMBOL": "BNB", "PRICE": 590.20, "CHANGE": 0.5, "VOLUME 24H": "$ 2,300,100,000", "TREND":}
     ]
     return pd.DataFrame(mock_data), "STANDBY"
 
@@ -92,7 +93,7 @@ if not df.empty:
             "VOLUME 24H": st.column_config.TextColumn("VOLUME 24H", width=200),
             "TREND": st.column_config.LineChartColumn("TREND", width=160)
         },
-        use_container_width=True, hide_index=True, height=500
+        use_container_width=True, hide_index=True, height=550
     )
     
     tz = pytz.timezone('Asia/Jakarta')
