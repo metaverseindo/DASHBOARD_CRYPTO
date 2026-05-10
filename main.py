@@ -1,118 +1,86 @@
 import streamlit as st
 import pandas as pd
 import requests
-from datetime import datetime
 import pytz
+from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
 import streamlit.components.v1 as components
 
-# 1. INITIAL CONFIG
-st.set_page_config(page_title="metaverseindo", layout="wide", initial_sidebar_state="collapsed")
+# 1. INITIAL SETUP
+st.set_page_config(page_title="metaverseindo", layout="wide", initial_sidebar_state="expanded")
 st_autorefresh(interval=30000, key="freshengine")
 
-# 2. CSS STYLING
+# 2. CSS CUSTOM
 st.markdown(r'''
-<style>
+    <style>
     header, footer, #MainMenu {visibility: hidden;}
-    .stApp { background-color: #05080f; color: #e2e8f0; font-family: sans-serif; }
-    .glass-card {
-        background: rgba(23, 32, 53, 0.45);
-        border: 1px solid rgba(16, 185, 129, 0.15);
-        border-radius: 16px;
-        padding: 20px;
-        backdrop-filter: blur(12px);
-        margin-bottom: 20px;
+    .stApp { background-color: #020617; color: #eaecef; font-family: 'Inter', sans-serif; }
+    [data-testid="stSidebar"] { background-color: #0f172a; border-right: 2px solid #10b981; }
+    .nav-bar-top {
+        background-color: #0f172a; border-bottom: 2px solid #10b981;
+        padding: 10px 15px; display: flex; justify-content: space-between;
+        align-items: center; margin-bottom: 15px; border-radius: 10px;
     }
-    .title-text { color: #10b981; font-weight: 800; font-size: 32px; margin: 0; }
-    [data-testid="stMetric"] { background: rgba(15, 23, 42, 0.9); border-left: 5px solid #10b981; padding: 15px !important; border-radius: 10px; }
-</style>
-''', unsafe_allow_html=True)
+    .brand-id { color: #10b981; font-weight: 900; font-size: 20px; }
+    .card-panel { background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 15px; margin-bottom: 10px; }
+    </style>
+    ''', unsafe_allow_html=True)
 
-# 3. DATA ENGINE
-@st.cache_data(ttl=30)
-def fetch_market_data():
+# 3. DATA ENGINE DENGAN FAILSAFE
+@st.cache_data(ttl=10)
+def get_crypto_data():
     try:
-        url = "https://api.coingecko.com/api/v3/coins/markets"
-        params = {'vs_currency': 'usd', 'order': 'market_cap_desc', 'per_page': 50, 'page': 1, 'price_change_percentage': '24h'}
-        headers = {'User-Agent': 'Mozilla/5.0'}
-        r = requests.get(url, params=params, headers=headers, timeout=10)
-        
-        if r.status_code == 200:
-            data = r.json()
-            btc = next((x for x in data if x['symbol'] == 'btc'), None)
+        # Coba ambil data ticker 24 jam
+        res = requests.get("https://api.binance.com/api/v3/ticker/24hr", timeout=5)
+        if res.status_code == 200:
+            data = res.json()
+            btc_p = next((float(i['lastPrice']) for i in data if i['symbol'] == "BTCUSDT"), 0)
             rows = []
-            for item in data:
-                change = item['price_change_percentage_24h']
-                indicator = "🟢" if change >= 0 else "🔴"
-                rows.append({
-                    "ASSET": item['symbol'].upper(),
-                    "PRICE": item['current_price'],
-                    "CHANGE (%)": change,
-                    "TREND": indicator
-                })
-            df = pd.DataFrame(rows).head(12)
-            df['PRICE'] = df['PRICE'].apply(lambda x: f"${x:,.2f}" if x >= 1 else f"${x:.6f}")
-            df['CHANGE (%)'] = df['CHANGE (%)'].apply(lambda x: f"{x:+.2f}%")
-            p_btc = float(btc['current_price']) if btc else 0.0
-            c_btc = float(btc['price_change_percentage_24h']) if btc else 0.0
-            return df, p_btc, c_btc
-    except: pass
-    return pd.DataFrame(), 0.0, 0.0
+            for i in data:
+                if i['symbol'].endswith('USDT'):
+                    vol = float(i.get('quoteVolume', 0))
+                    if vol > 1000000: # Turunin filter ke 1jt biar data pasti masuk
+                        rows.append({
+                            "SYMBOL": i['symbol'].replace('USDT',''),
+                            "PRICE": float(i['lastPrice']),
+                            "CHANGE": float(i['priceChangePercent'])
+                        })
+            if rows:
+                return pd.DataFrame(rows).head(10), btc_p, "ONLINE"
+    except Exception as e:
+        pass
+    
+    # DATA CADANGAN (Jika API Gagal agar tidak kosong)
+    fallback_df = pd.DataFrame([
+        {"SYMBOL": "BTC", "PRICE": 0.0, "CHANGE": 0.0},
+        {"SYMBOL": "ETH", "PRICE": 0.0, "CHANGE": 0.0}
+    ])
+    return fallback_df, 0, "OFFLINE/RETRY"
 
 # 4. RENDER UI
-df_final, btc_p, btc_c = fetch_market_data()
+nav = st.sidebar.radio("MENU", ["Market", "Hub"])
 tz = pytz.timezone('Asia/Jakarta')
-time_now = datetime.now(tz).strftime("%H:%M:%S")
+time_now = datetime.now(tz).strftime("%H:%M")
 
-# --- HEADER ---
-h1, h2 = st.columns(2)
-with h1:
-    st.markdown('<p class="title-text">METAVERSEINDO_</p>', unsafe_allow_html=True)
-with h2:
-    st.markdown(f"<div style='text-align:right;color:#64748b;padding-top:15px;font-family:monospace;'>{time_now} WIB</div>", unsafe_allow_html=True)
+st.markdown(f'''<div class="nav-bar-top"><div class="brand-id">metaverseindo</div><div style="color:#10b981;">{time_now} WIB</div></div>''', unsafe_allow_html=True)
 
-st.write("---")
+if nav == "Market":
+    df, btc_p, net_status = get_crypto_data()
+    
+    col_m = st.columns(3)
+    col_m.markdown(f'<div class="card-panel" style="text-align:center;"><h6>BTC</h6><h4>${btc_p:,.0f}</h4></div>', unsafe_allow_html=True)
+    col_m.markdown(f'<div class="card-panel" style="text-align:center;"><h6>STATUS</h6><h4>{net_status}</h4></div>', unsafe_allow_html=True)
+    col_m.markdown(f'<div class="card-panel" style="text-align:center;"><h6>TYPE</h6><h4>SPOT</h4></div>', unsafe_allow_html=True)
 
-# --- METRICS ---
-m1, m2, m3, m4 = st.columns(4)
-m1.metric("BTC / USD", f"${btc_p:,.0f}" if btc_p > 0 else "---", f"{btc_c:+.2f}%")
-m2.metric("STATUS", "LIVE", "STABLE")
-m3.metric("FEED", "COINGECKO", "V3")
-m4.metric("LOGIC", "TREND-ON", "ACTIVE")
-
-st.write("")
-
-# --- WORKSPACE ---
-l_col, r_col = st.columns([1, 1.8])
-
-with l_col:
-    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    st.write("### 📊 Market Flow")
-    if not df_final.empty:
-        def color_change(val):
-            color = '#10b981' if '+' in val else '#ef4444'
-            return f'color: {color}'
-        st.dataframe(df_final.style.map(color_change, subset=['CHANGE (%)']), use_container_width=True, hide_index=True, height=450)
-    else:
-        st.info("Re-syncing...")
-    st.markdown('</div>', unsafe_allow_html=True)
-
-with r_col:
-    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    st.write("### 📈 Live Chart")
-    tv_v93 = f'''
-    <div id="tv_v93"></div>
-    <script src="https://s3.tradingview.com/tv.js"></script>
-    <script>
-    new TradingView.widget({{
-      "width": "100%", "height": 450, "symbol": "BINANCE:BTCUSDT",
-      "interval": "60", "theme": "dark", "style": "1", "locale": "en",
-      "container_id": "tv_v93", "allow_symbol_change": true
-    }});
-    </script>
-    '''
-    components.html(tv_v93, height=460)
-    st.markdown('</div>', unsafe_allow_html=True)
-
-# 5. FOOTER (FIXED: Kurung ditutup dengan benar)
-st.markdown("<div style='text-align:center;color:#1e293b;font-size:10px;margin-top:20px;'>© 2026 METAVERSEINDO</div>", unsafe_allow_html=True)
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown('<div class="card-panel">', unsafe_allow_html=True)
+        st.write("##### Top Assets")
+        st.dataframe(df, use_container_width=True, hide_index=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+    with c2:
+        st.markdown('<div class="card-panel">', unsafe_allow_html=True)
+        st.write("##### Live Chart")
+        tv_html = '<div id="tv" style="height:300px;"></div><script src="https://s3.tradingview.com/tv.js"></script><script>new TradingView.widget({"autosize":true,"symbol":"BINANCE:BTCUSDT","theme":"dark","container_id":"tv"});</script>'
+        components.html(tv_html, height=310)
+        st.markdown('</div>', unsafe_allow_html=True)
