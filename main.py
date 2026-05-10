@@ -10,7 +10,7 @@ import streamlit.components.v1 as components
 st.set_page_config(page_title="metaverseindo", layout="wide", initial_sidebar_state="collapsed")
 st_autorefresh(interval=30000, key="freshengine")
 
-# 2. CSS STYLING (Glassmorphism Pro)
+# 2. CSS STYLING (The Real Professional Look)
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Plus+Jakarta+Sans:wght@400;800&display=swap');
@@ -19,11 +19,11 @@ st.markdown("""
     .stApp { background-color: #05080f; color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; }
 
     .glass-card {
-        background: rgba(23, 32, 53, 0.6);
-        border: 1px solid rgba(16, 185, 129, 0.2);
+        background: rgba(23, 32, 53, 0.4);
+        border: 1px solid rgba(16, 185, 129, 0.15);
         border-radius: 16px;
         padding: 20px;
-        backdrop-filter: blur(10px);
+        backdrop-filter: blur(12px);
         margin-bottom: 15px;
     }
 
@@ -31,7 +31,7 @@ st.markdown("""
         font-family: 'JetBrains Mono', monospace;
         color: #10b981;
         font-weight: 800;
-        font-size: 32px;
+        font-size: clamp(24px, 5vw, 32px);
         letter-spacing: -1px;
         margin: 0;
     }
@@ -43,7 +43,7 @@ st.markdown("""
         border-radius: 8px;
     }
     
-    [data-testid="stMetricValue"] { font-family: 'JetBrains Mono', monospace; font-size: 24px !important; }
+    [data-testid="stMetricValue"] { font-family: 'JetBrains Mono', monospace; font-size: 22px !important; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -68,17 +68,17 @@ def get_market_data():
         pass
     return pd.DataFrame(), 0.0, 0.0
 
-# 4. DATA FETCH & HEADER (BARIS 80 FIX)
+# 4. DATA FETCH & HEADER
 df, btc_p, btc_c = get_market_data()
 tz = pytz.timezone('Asia/Jakarta')
 time_now = datetime.now(tz).strftime("%H:%M:%S")
 
-# FIX DISINI: Tambahkan ratio agar tidak TypeError
+# FIX: Memberikan argumen agar tidak TypeError di Python 3.14
 c_title, c_clock = st.columns()
 
 with c_title:
     st.markdown('<p class="title-text">METAVERSEINDO_</p>', unsafe_allow_html=True)
-    st.caption("Terminal v.72 | Secure Connection Established")
+    st.caption("Terminal v.73 | Secure Connection Established")
 
 with c_clock:
     st.markdown(f"<div style='text-align: right; color: #64748b; font-family: JetBrains Mono; padding-top: 15px;'>{time_now} WIB</div>", unsafe_allow_html=True)
