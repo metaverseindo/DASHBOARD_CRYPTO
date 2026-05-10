@@ -72,7 +72,7 @@ def fetch_crypto_data(ex_name):
 # Ganti ini:
 col_h1, col_h2 = st.columns() # Angka artinya kolom kiri lebih lebar dari kolom kanan
 # Menjadi ini (Isi angka 2 untuk dua kolom):
-col_h1, col_h2 = st.columns(2)
+col_h1, col_h2 = st.columns()
 
 # ATAU kalau mau kolom kiri lebih lebar (seperti kode gue sebelumnya):
 col_h1, col_h2 = st.columns()
