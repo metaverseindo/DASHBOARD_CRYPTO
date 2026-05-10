@@ -5,25 +5,25 @@ from datetime import datetime
 import pytz
 from streamlit_autorefresh import st_autorefresh
 
-# 1. CONFIG
-st.set_page_config(page_title="META INDO", layout="wide", initial_sidebar_state="collapsed")
+# 1. Lambatin dikit ke 10 detik biar gak terlalu "grabak-grubuk" refresh-nya
+st_autorefresh(interval=10000, key="datarefresh")
 
-# Ganti dari 5000 (5 detik) ke 30000 (30 detik)
-st_autorefresh(interval=30000, key="datarefresh")
-
-# 3. STYLE & TAILWIND
+# 2. CSS tambahan biar tabelnya rata kanan (angka jadi rapi sejajar)
 st.markdown("""
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-    header, footer, #MainMenu {visibility: hidden;}
-    .stApp { background-color: #020617; }
-    [data-testid="stMetricValue"] { color: #34d399 !important; font-family: 'monospace'; font-weight: 800; }
-    /* Animasi Fade In buat tabel */
-    .stDataFrame { animation: fadeIn 0.5s; }
-    @keyframes fadeIn { from { opacity: 0.5; } to { opacity: 1; } }
+    /* Bikin angka di tabel rata kanan biar gampang dibandingin */
+    [data-testid="stDataFrame"] td { text-align: right !important; font-family: 'monospace'; }
+    /* Efek glow dikit buat header */
+    .stMarkdown h1 { text-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
     </style>
     """, unsafe_allow_html=True)
 
+# 3. Logika warna yang lebih tajam
+def style_row(row):
+    # Hijau Emerald untuk naik, Merah Rose untuk turun
+    color = '#10b981' if row['Change'] >= 0 else '#ef4444'
+    return [f'color: {color};' if name == 'Change' else 'color: #cbd5e1;' for name in row.index]
+    
 # 4. DATA ENGINE (Pake Cache buat bandingin harga lama & baru)
 @st.cache_data(ttl=4)
 def get_crypto_data():
