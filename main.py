@@ -3,7 +3,7 @@ import pandas as pd
 import ccxt
 from datetime import datetime
 
-# 1. CONFIG (Wajib paling atas)
+# 1. CONFIG (Harus paling atas)
 st.set_page_config(page_title="META INDO", layout="wide", initial_sidebar_state="collapsed")
 
 # 2. INJECT TAILWIND & CLEAN UI
@@ -35,15 +35,14 @@ st.markdown("""
 # 3. FUNGSI AMBIL DATA
 def get_data():
     try:
-        # Pake Kucoin biar stabil
         ex = ccxt.kucoin({'enableRateLimit': True})
         tickers = ex.fetch_tickers()
         return [{"Koin": s.split('/'), "Harga": v['last'], "Vol": v['quoteVolume'], "Change": v['percentage'] or 0.0} 
                 for s, v in tickers.items() if '/USDT' in s]
-    except Exception as e:
+    except:
         return []
 
-# 4. HEADER META INDO - LOGO 📊
+# 4. HEADER META INDO
 st.markdown("""
     <div class="flex justify-between items-center bg-slate-900/80 p-6 rounded-2xl border border-slate-800 mb-8">
         <div>
@@ -57,20 +56,20 @@ st.markdown("""
     </div>
     """, unsafe_allow_html=True)
 
-# Tombol Refresh
-col_btn = st.columns()
+# 5. TOMBOL REFRESH (FIXED: st.columns())
+col_btn = st.columns() 
 with col_btn:
     if st.button("🔄 SYNC DATA"):
         st.cache_data.clear()
         st.rerun()
 
-# 5. ENGINE UTAMA
+# 6. ENGINE UTAMA
 data = get_data()
 
 if data:
     df = pd.DataFrame(data).sort_values("Vol", ascending=False)
     
-    # METRICS
+    # METRICS (FIXED: st.columns(3))
     m_cols = st.columns(3)
     coins = ["BTC", "ETH", "SOL"]
     
@@ -86,7 +85,7 @@ if data:
 
     st.markdown("<div class='my-8 border-b border-slate-800'></div>", unsafe_allow_html=True)
 
-    # 6. DATA TABLE
+    # 7. DATA TABLE
     st.markdown("<h2 class='text-xl font-bold text-slate-200 mb-4 px-2'>📊 Market Movement</h2>", unsafe_allow_html=True)
     
     st.dataframe(
@@ -96,8 +95,7 @@ if data:
         hide_index=True
     )
     
-    # Footer info
     st.caption(f"Last Synchronization: {datetime.now().strftime('%H:%M:%S')} WIB")
 
 else:
-    st.warning("Menunggu data dari provider... Coba klik Sync Data.")
+    st.warning("Gagal ambil data. Coba klik Sync Data.")
