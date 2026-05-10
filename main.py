@@ -12,14 +12,31 @@ st.set_page_config(
 st.title("📈 Dashboard Crypto Real-Time")
 st.caption("Semua pasangan USDT dari Binance API")
 
+import ccxt
+
 def fetch_all_usdt_tickers():
     try:
-        url = "https://api1.binance.com/api/v3/ticker/24hr"
-        resp = requests.get(url, timeout=10)
-        resp.raise_for_status()
-        all_tickers = resp.json()
-        return [t for t in all_tickers if t["symbol"].endswith("USDT")]
-    except Exception:
+        # Kita pakai library CCXT biar lebih stabil tembus ke Binance
+        exchange = ccxt.binance({
+            'enableRateLimit': True,
+        })
+        tickers = exchange.fetch_tickers()
+        
+        # Filter hanya yang berakhiran USDT
+        rows = []
+        for symbol, t in tickers.items():
+            if symbol.endswith('/USDT'):
+                rows.append({
+                    "symbol": symbol.replace('/', ''),
+                    "lastPrice": t['last'],
+                    "priceChangePercent": t['percentage'],
+                    "highPrice": t['high'],
+                    "lowPrice": t['low'],
+                    "quoteVolume": t['quoteVolume']
+                })
+        return rows
+    except Exception as e:
+        print(f"Error: {e}")
         return []
 
 TOP_SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
