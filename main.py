@@ -57,7 +57,7 @@ def fetch_crypto_data(ex_name):
 col_h1, col_h2 = st.columns(2) 
 with col_h1:
     st.title("📈 CRYPTO NEON")
-    st.caption(f"Source: {exchange_choice} API | Final Stable Version")
+    st.caption(f"Source: {exchange_choice} API | Final Stable 3.14")
 with col_h2:
     if st.button("🔄 Force Refresh"):
         st.rerun()
@@ -83,8 +83,7 @@ if len(data) > 0:
 
     st.markdown("---")
 
-    # --- TABLE & CHART (FIXED: Baris 87 yang lu laporin error tadi) ---
-    # SEKARANG SUDAH ADA PARAMETER - GAK AKAN ERROR LAGI
+    # --- TABLE & CHART (FIXED BARIS 88: st.columns()) ---
     col_table, col_chart = st.columns()
     
     with col_table:
@@ -128,7 +127,7 @@ if len(data) > 0:
     st.caption(f"Last sync: {datetime.now().strftime('%H:%M:%S')}")
 
 else:
-    st.warning("⚠️ Data gagal ditarik. Coba ganti exchange di sidebar.")
+    st.warning("⚠️ Data gagal ditarik. Silakan ganti exchange di sidebar.")
 
 # --- 7. AUTO REFRESH ---
 if auto_refresh:
