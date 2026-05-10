@@ -10,7 +10,7 @@ import streamlit.components.v1 as components
 st.set_page_config(page_title="metaverseindo", layout="wide", initial_sidebar_state="expanded")
 st_autorefresh(interval=30000, key="freshengine")
 
-# 2. CSS & BOOTSTRAP (RAW STRING)
+# 2. CSS & BOOTSTRAP (RAW STRING - SAFE)
 st.markdown(r'''
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
@@ -42,7 +42,7 @@ st.markdown(r'''
     </style>
     ''', unsafe_allow_html=True)
 
-# 3. SIDEBAR NAVIGATION
+# 3. SIDEBAR
 with st.sidebar:
     st.markdown('<div class="brand-id" style="font-size: 18px;">metaverseindo</div>', unsafe_allow_html=True)
     st.markdown("<hr style='border-color: #10b981;'>", unsafe_allow_html=True)
@@ -52,7 +52,7 @@ with st.sidebar:
         index=0
     )
     st.markdown("---")
-    st.caption("v.52 | Stable Build")
+    st.caption("v.53 | Stable metaverseindo")
 
 # 4. DATA ENGINE
 @st.cache_data(ttl=20)
@@ -86,7 +86,7 @@ def get_master_data():
     backup_df = pd.DataFrame([{"SYMBOL": "BTC", "PRICE": 0.0, "CHANGE": 0.0, "VOLUME 24H": "BUSY"}])
     return backup_df, "🔴 BUSY"
 
-# 5. RENDER LOGIC
+# 5. RENDER CONTENT
 tz = pytz.timezone('Asia/Jakarta')
 time_now = datetime.now(tz).strftime("%H:%M:%S")
 
@@ -108,7 +108,7 @@ if nav_choice == "📊 Terminal Market":
     
     with col_l:
         st.markdown('<div class="card-panel">', unsafe_allow_html=True)
-        st.write("##### 📊 Top Market")
+        st.write("##### 📊 Top Volume")
         st.dataframe(df, use_container_width=True, hide_index=True, height=500)
         st.caption(f"Status: {net_status}")
         st.markdown('</div>', unsafe_allow_html=True)
@@ -116,35 +116,11 @@ if nav_choice == "📊 Terminal Market":
     with col_r:
         st.markdown('<div class="card-panel">', unsafe_allow_html=True)
         st.write("##### 📈 Analysis Chart")
-        # FIXED HTML STRING
         tv_html = '''
-        <div id="tv-metaverse" style="height:500px;"></div>
+        <div id="tv-meta-final" style="height:500px;"></div>
         <script src="https://s3.tradingview.com/tv.js"></script>
         <script>
         new TradingView.widget({
-            "autosize": true,
-            "symbol": "BINANCE:BTCUSDT",
-            "interval": "60",
-            "theme": "dark",
-            "style": "1",
-            "locale": "en",
-            "toolbar_bg": "#f1f3f6",
-            "enable_publishing": false,
-            "allow_symbol_change": true,
-            "container_id": "tv-metaverse"
-        });
-        </script>
-        '''
-        components.html(tv_html, height=510)
-        st.markdown('</div>', unsafe_allow_html=True)
-
-elif nav_choice == "🚀 Trading Hub":
-    st.markdown('<div class="card-panel"><h3>🚀 Trading Terminal</h3><p>Fasilitas trading metaverseindo sedang disiapkan.</p></div>', unsafe_allow_html=True)
-
-elif nav_choice == "⚙️ System Settings":
-    st.markdown('<div class="card-panel"><h3>⚙️ Dashboard Diagnostics</h3>', unsafe_allow_html=True)
-    if "BINANCE_API_KEY" in st.secrets:
-        st.success("API Connection: ENCRYPTED")
-    else:
-        st.warning("API Connection: PUBLIC")
-    st.markdown('</div>', unsafe
+            "autosize": true, "symbol": "BINANCE:BTCUSDT", "interval": "60",
+            "theme": "dark", "style": "1", "locale": "en", "toolbar_bg": "#f1f3f6",
+            "enable_publishing": false, "allow_symbol_change": true, "container_id": "tv
