@@ -46,48 +46,45 @@ def fetch_crypto_data(ex_name):
                     "Koin": symbol.split('/'),
                     "Harga": t['last'],
                     "Change": t['percentage'] if t['percentage'] is not None else 0.0,
-                    "High": t['high'],
-                    "Low": t['low'],
                     "Volume": t['quoteVolume']
                 })
         return rows
     except Exception as e:
-        st.error(f"Error fetching from {ex_name}: {e}")
+        st.error(f"Error fetching data: {e}")
         return []
 
-# --- 5. HEADER (FIXED: WAJIB ADA ANGKA DI DALAM KURUNG) ---
+# --- 5. HEADER (FIXED: st.columns(2)) ---
 col_h1, col_h2 = st.columns(2) 
 with col_h1:
-    st.title("📈 CRYPTO NEON DASHBOARD")
-    st.caption(f"Data Source: {exchange_choice} API")
+    st.title("📈 CRYPTO NEON")
+    st.caption(f"Source: {exchange_choice}")
 with col_h2:
-    if st.button("🔄 Refresh Sekarang"):
+    if st.button("🔄 Force Refresh"):
         st.rerun()
 
-# --- 6. DATA PROCESSING ---
-with st.spinner("🚀 Sinkronisasi..."):
+# --- 6. MAIN CONTENT ---
+with st.spinner("🚀 Syncing..."):
     data = fetch_crypto_data(exchange_choice)
 
 if len(data) > 0:
     df = pd.DataFrame(data)
     df = df.sort_values("Volume", ascending=False).reset_index(drop=True)
 
-    # --- TOP METRICS (FIXED: WAJIB ADA ANGKA 3) ---
+    # --- TOP METRICS (FIXED: st.columns(3)) ---
     m_cols = st.columns(3)
-    top_symbols = ["BTC", "ETH", "SOL"]
-    for i, sym in enumerate(top_symbols):
+    for i, sym in enumerate(["BTC", "ETH", "SOL"]):
         row = df[df['Koin'] == sym]
         if not row.empty:
             m_cols[i].metric(label=f"{sym}/USDT", value=f"${row.iloc['Harga']:,.2f}", delta=f"{row.iloc['Change']:+.2f}%")
 
     st.markdown("---")
 
-    # --- LAYOUT TABLE & CHART (FIXED: WAJIB ADA RASIO) ---
+    # --- TABLE & CHART (FIXED: Baris 86 - st.columns()) ---
     col_table, col_chart = st.columns()
     
     with col_table:
         st.subheader("📊 Market Overview")
-        search = st.text_input("🔍 Cari Koin...", "").upper()
+        search = st.text_input("🔍 Search Coin...", "").upper()
         df_display = df[df['Koin'].str.contains(search)] if search else df.head(50)
         
         def color_change(val):
@@ -95,20 +92,20 @@ if len(data) > 0:
 
         st.dataframe(
             df_display.style.format({"Harga": "${:,.4f}", "Change": "{:+.2f}%", "Volume": "${:,.0f}"}).map(color_change, subset=["Change"]),
-            use_container_width=True, height=500, hide_index=True
+            use_container_width=True, height=450, hide_index=True
         )
 
     with col_chart:
-        st.subheader("🔥 Top 10 Volume")
+        st.subheader("🔥 Top 10 Vol")
         top_10 = df.head(10)
         fig = go.Figure(go.Bar(x=top_10['Volume'], y=top_10['Koin'], orientation='h', marker=dict(color='#deff9a')))
-        fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white', height=500, margin=dict(l=0, r=0, t=20, b=0), yaxis=dict(autorange="reversed"))
+        fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white', height=450, margin=dict(l=0, r=0, t=20, b=0), yaxis=dict(autorange="reversed"))
         st.plotly_chart(fig, use_container_width=True)
 
-    st.caption(f"🕒 Terakhir diperbarui: {datetime.now().strftime('%H:%M:%S')}")
+    st.caption(f"Last sync: {datetime.now().strftime('%H:%M:%S')}")
 
 else:
-    st.warning("⚠️ Menunggu data dari Exchange... Pastikan koneksi stabil.")
+    st.warning("⚠️ Gagal tarik data. Coba ganti exchange di sidebar.")
 
 # --- 7. AUTO REFRESH ---
 if auto_refresh:
