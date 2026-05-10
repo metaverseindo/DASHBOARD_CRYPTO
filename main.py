@@ -10,7 +10,7 @@ st.set_page_config(page_title="metaverseindo", layout="wide", initial_sidebar_st
 tz = pytz.timezone('Asia/Jakarta')
 time_now = datetime.now(tz).strftime("%H:%M:%S")
 
-# 3. CSS CUSTOM (Ultra-Clean & Pro)
+# 3. CSS CUSTOM
 st.markdown(r'''
     <style>
     header, footer, #MainMenu {visibility: hidden;}
@@ -24,13 +24,8 @@ st.markdown(r'''
         align-items: center;
         margin-bottom: 20px;
     }
-    .brand-id { 
-        color: #10b981; font-weight: 900; font-size: 28px; letter-spacing: 1px;
-    }
-    .live-clock {
-        color: #10b981; font-family: monospace;
-        font-weight: bold; font-size: 22px;
-    }
+    .brand-id { color: #10b981; font-weight: 900; font-size: 28px; letter-spacing: 1px; }
+    .live-clock { color: #10b981; font-family: monospace; font-weight: bold; font-size: 22px; }
     .card-panel { 
         background-color: rgba(15, 23, 42, 0.8); 
         border: 1px solid #1e293b; 
@@ -47,8 +42,8 @@ st.markdown(f'''
     </div>
     ''', unsafe_allow_html=True)
 
-# 5. MAIN LAYOUT (SUDAH DIPERBAIKI BARIS 51)
-# Kita isi agar Python 3.14 tidak error lagi
+# 5. MAIN LAYOUT (AUDITED & FIXED)
+# Baris ini SANGAT PENTING: Harus ada agar Python 3.14 tidak error
 c_left, c_right = st.columns()
 
 with c_left:
