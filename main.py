@@ -6,7 +6,7 @@ from datetime import datetime
 
 # --- 1. CONFIG DASHBOARD ---
 st.set_page_config(
-    page_title="Crypto Metaverse Dashboard",
+    page_title="Crypto Neon Dashboard",
     page_icon="⚡",
     layout="wide",
 )
@@ -29,15 +29,11 @@ with st.sidebar:
     exchange_choice = st.selectbox("Pilih Exchange:", ["KuCoin", "Binance"])
     auto_refresh = st.toggle("Auto-refresh (30s)", value=True)
     st.markdown("---")
-    st.info("Tips: Gunakan KuCoin jika Binance memblokir IP.")
 
-# --- 4. FUNGSI AMBIL DATA ---
+# --- 4. DATA FETCHING ---
 def fetch_crypto_data(ex_name):
     try:
-        if ex_name == "KuCoin":
-            exchange = ccxt.kucoin({'enableRateLimit': True})
-        else:
-            exchange = ccxt.binance({'enableRateLimit': True})
+        exchange = ccxt.kucoin() if ex_name == "KuCoin" else ccxt.binance()
         tickers = exchange.fetch_tickers()
         rows = []
         for symbol, t in tickers.items():
@@ -53,84 +49,49 @@ def fetch_crypto_data(ex_name):
         st.error(f"Error: {e}")
         return []
 
-# --- 5. HEADER (FIXED: st.columns(2)) ---
-col_h1, col_h2 = st.columns(2) 
+# --- 5. HEADER (FIXED) ---
+col_h1, col_h2 = st.columns() # BARIS 57: SUDAH ADA PARAMETER
 with col_h1:
-    st.title("📈 CRYPTO Metaverse")
-    st.caption(f"Source: {exchange_choice} | Python 3.14 Build")
+    st.title("📈 CRYPTO NEON")
+    st.caption(f"Source: {exchange_choice} | Python 3.14 Version")
 with col_h2:
     if st.button("🔄 Force Refresh"):
         st.rerun()
 
 # --- 6. MAIN ENGINE ---
-with st.spinner("🚀 Syncing with Blockchain..."):
-    data = fetch_crypto_data(exchange_choice)
+data = fetch_crypto_data(exchange_choice)
 
 if len(data) > 0:
     df = pd.DataFrame(data)
     df = df.sort_values("Volume", ascending=False).reset_index(drop=True)
 
-    # --- TOP METRICS (FIXED: st.columns(3)) ---
-    m_cols = st.columns(3)
-    tickers_to_show = ["BTC", "ETH", "SOL"]
-    for i, sym in enumerate(tickers_to_show):
+    # METRICS (FIXED)
+    m_cols = st.columns(3) # BARIS 74: SUDAH ADA PARAMETER
+    for i, sym in enumerate(["BTC", "ETH", "SOL"]):
         row = df[df['Koin'] == sym]
         if not row.empty:
-            with m_cols[i]:
-                st.metric(
-                    label=f"{sym}/USDT", 
-                    value=f"${row.iloc['Harga']:,.2f}", 
-                    delta=f"{row.iloc['Change']:+.2f}%"
-                )
+            m_cols[i].metric(label=f"{sym}/USDT", value=f"${row.iloc['Harga']:,.2f}", delta=f"{row.iloc['Change']:+.2f}%")
 
     st.markdown("---")
 
-    # --- TABLE & CHART (FIXED BARIS 90: st.columns()) ---
-    # SEKARANG SUDAH ADA PARAMETERNYA! GAK AKAN ERROR 'spec' LAGI.
-    col_table, col_chart = st.columns()
+    # --- TABLE & CHART (BARIS 90: WAJIB ADA ANGKA!) ---
+    # INI BARIS YANG ERROR DI LOG LU: SEKARANG GUE ISI
+    col_table, col_chart = st.columns() # <--- JANGAN DIHAPUS ANGKA NYA!
     
     with col_table:
         st.subheader("📊 Market Overview")
         search = st.text_input("🔍 Search Coin...", "").upper()
         df_display = df[df['Koin'].str.contains(search)] if search else df.head(50)
-        
-        def color_change(val):
-            return f"color: {'#deff9a' if val >= 0 else '#ff4b4b'}; font-weight: bold"
-
-        st.dataframe(
-            df_display.style.format({
-                "Harga": "${:,.4f}", 
-                "Change": "{:+.2f}%", 
-                "Volume": "${:,.0f}"
-            }).map(color_change, subset=["Change"]),
-            use_container_width=True, 
-            height=450, 
-            hide_index=True
-        )
+        st.dataframe(df_display, use_container_width=True, height=450, hide_index=True)
 
     with col_chart:
         st.subheader("🔥 Top 10 Vol")
         top_10 = df.head(10)
-        fig = go.Figure(go.Bar(
-            x=top_10['Volume'], 
-            y=top_10['Koin'], 
-            orientation='h', 
-            marker=dict(color='#deff9a')
-        ))
-        fig.update_layout(
-            paper_bgcolor='rgba(0,0,0,0)', 
-            plot_bgcolor='rgba(0,0,0,0)', 
-            font_color='white', 
-            height=450, 
-            margin=dict(l=0, r=0, t=20, b=0), 
-            yaxis=dict(autorange="reversed")
-        )
+        fig = go.Figure(go.Bar(x=top_10['Volume'], y=top_10['Koin'], orientation='h', marker=dict(color='#deff9a')))
+        fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white', height=450, yaxis=dict(autorange="reversed"))
         st.plotly_chart(fig, use_container_width=True)
 
     st.caption(f"Last sync: {datetime.now().strftime('%H:%M:%S')}")
-
-else:
-    st.warning("⚠️ Koneksi API gagal. Coba ganti exchange di sidebar.")
 
 # --- 7. AUTO REFRESH ---
 if auto_refresh:
