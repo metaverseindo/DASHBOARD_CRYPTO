@@ -83,14 +83,17 @@ if not df.empty:
 
     st.markdown("<div class='my-6 border-b border-slate-800'></div>", unsafe_allow_html=True)
 
-    # 7. MAIN TABLE (DENGAN FIX LEBAR KOLOM NO)
+   # 7. MAIN TABLE (FIX: NAMA KOIN TEGAS & LEBAR PAS)
     st.markdown("<h2 class='text-xl font-bold text-slate-200 mb-4 px-2'>📊 Market Movement</h2>", unsafe_allow_html=True)
 
     def style_rows(row):
         change_color = '#10b981' if row['Change'] >= 0 else '#ef4444'
         styles = []
         for name in row.index:
-            if name == 'Change':
+            if name == 'Koin':
+                # Nama koin dibuat PUTIH TERANG & BOLD
+                styles.append('color: #ffffff; font-weight: 900; text-transform: uppercase;')
+            elif name == 'Change':
                 styles.append(f'color: {change_color}; font-weight: 800;')
             elif name == 'No':
                 styles.append('color: #64748b; text-align: center;')
@@ -105,22 +108,18 @@ if not df.empty:
         "Change": "{:+.2f}%"
     }).apply(style_rows, axis=1)
 
-    # DISINI KUNCI LEBARNYA:
+    # SETTING LEBAR YANG IDEAL
     st.dataframe(
         styled_df,
         use_container_width=True, 
         height=650, 
         hide_index=True,
         column_config={
-            "No": st.column_config.TextColumn(
-                "No",
-                width="small",  # Kita paksa jadi kecil banget
-                help="Ranking berdasarkan Volume"
-            ),
-            "Koin": st.column_config.TextColumn("Koin", width="medium"),
-            "Harga": st.column_config.TextColumn("Harga ($)", width="medium"),
-            "Vol": st.column_config.TextColumn("Volume 24h", width="large"),
-            "Change": st.column_config.TextColumn("Change (%)", width="medium")
+            "No": st.column_config.TextColumn("No", width="small"),
+            "Koin": st.column_config.TextColumn("COIN NAME", width="small"), # Dikecilin biar pas
+            "Harga": st.column_config.TextColumn("PRICE ($)", width="medium"),
+            "Vol": st.column_config.TextColumn("24H VOLUME", width="large"), # Volume paling lebar
+            "Change": st.column_config.TextColumn("CHANGE (%)", width="small")
         }
     )
     
