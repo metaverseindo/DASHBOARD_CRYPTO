@@ -47,8 +47,7 @@ st.markdown(f'''
     </div>
     ''', unsafe_allow_html=True)
 
-# 5. MAIN LAYOUT (AUDIT BARIS 47-52)
-# Gue kunci angkanya di sini. Wajib ada agar tidak TypeError.
+# 5. MAIN LAYOUT (FIXED: Baris ini sudah diisi angka)
 c_left, c_right = st.columns()
 
 with c_left:
