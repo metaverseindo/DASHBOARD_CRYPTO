@@ -151,8 +151,10 @@ if data:
 
     st.caption(f"Last sync: {datetime.now().strftime('%H:%M:%S')} | Total Pairs: {len(df)}")
 
+if len(data) > 0: # Cek apakah datanya beneran ada isinya
+    df = pd.DataFrame(data)
 else:
-    st.warning("Data tidak tersedia. Coba ganti exchange di sidebar.")
+st.warning("Menunggu data dari Exchange... Pastikan koneksi internet stabil.")
 
 # --- AUTO REFRESH ---
 if auto_refresh:
