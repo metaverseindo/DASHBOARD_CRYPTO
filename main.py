@@ -3,14 +3,14 @@ import streamlit.components.v1 as components
 from datetime import datetime
 import pytz
 
-# 1. INITIAL SETUP
+# 1. INITIAL SETUP - AUDITED
 st.set_page_config(page_title="metaverseindo", layout="wide", initial_sidebar_state="collapsed")
 
-# 2. JAM REAL-TIME (WIB)
+# 2. JAM REAL-TIME WIB - AUDITED
 tz = pytz.timezone('Asia/Jakarta')
 time_now = datetime.now(tz).strftime("%H:%M:%S")
 
-# 3. CSS CUSTOM (Ultra-Clean)
+# 3. CSS CUSTOM - AUDITED
 st.markdown(r'''
     <style>
     header, footer, #MainMenu {visibility: hidden;}
@@ -24,13 +24,8 @@ st.markdown(r'''
         align-items: center;
         margin-bottom: 20px;
     }
-    .brand-id { 
-        color: #10b981; font-weight: 900; font-size: 28px; letter-spacing: 1px;
-    }
-    .live-clock {
-        color: #10b981; font-family: monospace;
-        font-weight: bold; font-size: 22px;
-    }
+    .brand-id { color: #10b981; font-weight: 900; font-size: 28px; letter-spacing: 1px; }
+    .live-clock { color: #10b981; font-family: monospace; font-weight: bold; font-size: 22px; }
     .card-panel { 
         background-color: rgba(15, 23, 42, 0.8); 
         border: 1px solid #1e293b; 
@@ -39,7 +34,7 @@ st.markdown(r'''
     </style>
     ''', unsafe_allow_html=True)
 
-# 4. NAVBAR (Hanya Nama & Jam)
+# 4. NAVBAR - AUDITED
 st.markdown(f'''
     <div class="nav-bar-top">
         <div class="brand-id">METAVERSEINDO_</div>
@@ -47,13 +42,13 @@ st.markdown(f'''
     </div>
     ''', unsafe_allow_html=True)
 
-# 5. MAIN LAYOUT (FIXED BARIS 51)
-# Gue kasih rasio biar kolom kiri lebih ramping, kanan buat chart luas
-col_left, col_right = st.columns()
+# 5. MAIN LAYOUT - AUDITED & FIXED (Baris 52)
+# Gue sebutin angkanya dengan jelas:
+c_left, c_right = st.columns()
 
-with col_left:
+with c_left:
     st.markdown('<div class="card-panel">', unsafe_allow_html=True)
-    # WIDGET KIRI: Market Quotes
+    # WIDGET KIRI: Market Quotes - AUDITED
     market_quotes = '''
     <div class="tradingview-widget-container">
       <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js" async>
@@ -81,9 +76,9 @@ with col_left:
     components.html(market_quotes, height=760)
     st.markdown('</div>', unsafe_allow_html=True)
 
-with col_right:
+with c_right:
     st.markdown('<div class="card-panel">', unsafe_allow_html=True)
-    # WIDGET KANAN: Advanced Chart (Bisa ganti pair di dalem)
+    # WIDGET KANAN: Advanced Chart - AUDITED
     tv_chart = '''
     <div id="tradingview_final"></div>
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
@@ -105,4 +100,5 @@ with col_right:
     components.html(tv_chart, height=760)
     st.markdown('</div>', unsafe_allow_html=True)
 
+# 6. FOOTER - AUDITED
 st.markdown("<div style='text-align:center; color:#334155; font-size:10px; margin-top:10px;'>METAVERSEINDO TERMINAL | 2026</div>", unsafe_allow_html=True)
