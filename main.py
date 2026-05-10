@@ -83,31 +83,47 @@ if not df.empty:
 
     st.markdown("<div class='my-6 border-b border-slate-800'></div>", unsafe_allow_html=True)
 
-    # 7. MAIN TABLE (Update: Style Kolom Nomor)
+    # 7. MAIN TABLE (DENGAN FIX LEBAR KOLOM NO)
     st.markdown("<h2 class='text-xl font-bold text-slate-200 mb-4 px-2'>📊 Market Movement</h2>", unsafe_allow_html=True)
 
     def style_rows(row):
-        # Change Ijo/Merah
         change_color = '#10b981' if row['Change'] >= 0 else '#ef4444'
         styles = []
         for name in row.index:
             if name == 'Change':
                 styles.append(f'color: {change_color}; font-weight: 800;')
             elif name == 'No':
-                styles.append('color: #64748b; text-align: center;') # Nomor abu-abu & tengah
+                styles.append('color: #64748b; text-align: center;')
             else:
-                styles.append('color: #cbd5e1;') # Angka lain abu-abu terang
+                styles.append('color: #cbd5e1;')
         return styles
 
     styled_df = df.style.format({
-        "No": "{:02d}",     # Format 01, 02, dst
-        "Harga": "${:,.4f}", # Koma ribuan, titik desimal
-        "Vol": "{:,.0f}",    # Koma ribuan, tanpa desimal
-        "Change": "{:+.2f}%" 
+        "No": "{:02d}",
+        "Harga": "${:,.4f}",
+        "Vol": "{:,.0f}",
+        "Change": "{:+.2f}%"
     }).apply(style_rows, axis=1)
 
-    st.dataframe(styled_df, use_container_width=True, height=650, hide_index=True)
-
+    # DISINI KUNCI LEBARNYA:
+    st.dataframe(
+        styled_df,
+        use_container_width=True, 
+        height=650, 
+        hide_index=True,
+        column_config={
+            "No": st.column_config.TextColumn(
+                "No",
+                width="small",  # Kita paksa jadi kecil banget
+                help="Ranking berdasarkan Volume"
+            ),
+            "Koin": st.column_config.TextColumn("Koin", width="medium"),
+            "Harga": st.column_config.TextColumn("Harga ($)", width="medium"),
+            "Vol": st.column_config.TextColumn("Volume 24h", width="large"),
+            "Change": st.column_config.TextColumn("Change (%)", width="medium")
+        }
+    )
+    
     # 8. FOOTER
     tz = pytz.timezone('Asia/Jakarta')
     st.markdown(f'<p class="text-slate-500 text-xs font-mono mt-4">ID: {datetime.now(tz).strftime("%H:%M:%S")} WIB | Auto-Refresh: 10s</p>', unsafe_allow_html=True)
