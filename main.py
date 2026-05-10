@@ -8,107 +8,116 @@ import streamlit.components.v1 as components
 
 # 1. SETUP
 st.set_page_config(page_title="metaverseindo", layout="wide", initial_sidebar_state="collapsed")
-st_autorefresh(interval=30000, key="freshengine")
+st_autorefresh(interval=20000, key="freshengine") # Update tiap 20 detik
 
-# 2. CSS STYLING (V.63 Style)
+# 2. CSS STYLING (Tetap Dark & Pro)
 st.markdown(r'''
 <style>
     header, footer, #MainMenu {visibility: hidden;}
     .stApp { background-color: #05080f; color: #e2e8f0; font-family: sans-serif; }
     .glass-card {
-        background: rgba(23, 32, 53, 0.5);
+        background: rgba(23, 32, 53, 0.45);
         border: 1px solid rgba(16, 185, 129, 0.2);
-        border-radius: 12px;
+        border-radius: 16px;
         padding: 20px;
         margin-bottom: 20px;
     }
-    .title-text { color: #10b981; font-weight: 800; font-size: 28px; margin: 0; }
-    [data-testid="stMetric"] { background: #0f172a; border-left: 5px solid #10b981; padding: 10px !important; border-radius: 8px; }
+    .title-text { color: #10b981; font-weight: 800; font-size: 32px; margin: 0; }
+    [data-testid="stMetric"] { background: #0f172a; border-left: 5px solid #10b981; padding: 15px !important; border-radius: 10px; }
 </style>
 ''', unsafe_allow_html=True)
 
-# 3. DATA ENGINE (Original Binance Feed)
-@st.cache_data(ttl=15)
-def get_crypto_data():
+# 3. DATA ENGINE (REALTIME FEED)
+@st.cache_data(ttl=10)
+def get_realtime_data():
     try:
-        r = requests.get("https://api.binance.com/api/v3/ticker/24hr", timeout=5)
+        # Pake CryptoCompare buat kestabilan tingkat tinggi
+        symbols = "BTC,ETH,BNB,SOL,XRP,ADA,DOGE,AVAX,TRX,DOT,LINK,MATIC"
+        url = f"https://min-api.cryptocompare.com/data/pricemultifull?fsyms={symbols}&tsyms=USD"
+        r = requests.get(url, timeout=10)
+        
         if r.status_code == 200:
-            data = r.json()
-            btc = next((i for i in data if i['symbol'] == "BTCUSDT"), None)
+            raw = r.json()['RAW']
             rows = []
-            for i in data:
-                if i['symbol'].endswith('USDT') and float(i.get('quoteVolume', 0)) > 30000000:
-                    change = float(i['priceChangePercent'])
-                    # Indikator Jual/Beli (Warna)
-                    indicator = "🟢" if change >= 0 else "🔴"
-                    rows.append({
-                        "ASSET": i['symbol'].replace('USDT',''),
-                        "PRICE": float(i['lastPrice']),
-                        "24H %": change,
-                        "SIGNAL": indicator
-                    })
-            df = pd.DataFrame(rows).head(12)
-            # Formatting
-            df['PRICE'] = df['PRICE'].apply(lambda x: f"{x:,.2f}" if x >= 1 else f"{x:.6f}")
-            df['24H %'] = df['24H %'].apply(lambda x: f"{x:+.2f}%")
-            return df, float(btc['lastPrice']), float(btc['priceChangePercent'])
-    except: pass
+            for coin in raw:
+                data = raw[coin]['USD']
+                change = float(data['CHANGEPCT24HOUR'])
+                rows.append({
+                    "ASSET": coin,
+                    "PRICE": float(data['PRICE']),
+                    "24H %": change,
+                    "TREND": "🟢" if change >= 0 else "🔴"
+                })
+            
+            df = pd.DataFrame(rows)
+            # Ambil BTC secara spesifik buat metrik
+            btc_price = raw['BTC']['USD']['PRICE']
+            btc_change = raw['BTC']['USD']['CHANGEPCT24HOUR']
+            
+            # Format tampilan tabel
+            df_display = df.copy()
+            df_display['PRICE'] = df_display['PRICE'].apply(lambda x: f"${x:,.2f}" if x >= 1 else f"${x:.6f}")
+            df_display['24H %'] = df_display['24H %'].apply(lambda x: f"{x:+.2f}%")
+            
+            return df_display, float(btc_price), float(btc_change)
+    except:
+        pass
     return pd.DataFrame(), 0.0, 0.0
 
-# 4. RENDER UI
-df, btc_p, btc_c = get_crypto_data()
+# 4. EXECUTE
+df_market, btc_p, btc_c = get_realtime_data()
 tz = pytz.timezone('Asia/Jakarta')
 time_now = datetime.now(tz).strftime("%H:%M:%S")
 
-# HEADER
-c1, c2 = st.columns(2)
-with c1:
+# --- HEADER ---
+h1, h2 = st.columns(2)
+with h1:
     st.markdown('<p class="title-text">METAVERSEINDO_</p>', unsafe_allow_html=True)
-with c2:
-    st.markdown(f"<div style='text-align:right; color:#64748b; padding-top:10px;'>{time_now} WIB</div>", unsafe_allow_html=True)
+with h2:
+    st.markdown(f"<div style='text-align:right;color:#64748b;padding-top:15px;font-family:monospace;'>{time_now} WIB</div>", unsafe_allow_html=True)
 
 st.write("---")
 
-# METRICS
+# --- METRICS ---
 m1, m2, m3, m4 = st.columns(4)
-m1.metric("BTC", f"${btc_p:,.0f}", f"{btc_c}%")
-m2.metric("STATUS", "LIVE", "OK")
-m3.metric("FEED", "BINANCE", "SPOT")
-m4.metric("VOL", ">30M", "STABLE")
+m1.metric("BTC / USD", f"${btc_p:,.0f}" if btc_p > 0 else "CONNECTING...", f"{btc_c:+.2f}%")
+m2.metric("STATUS", "LIVE", "STABLE")
+m3.metric("FEED", "CRYPTOCOMPARE", "REALTIME")
+m4.metric("LOGIC", "TREND-ON", "ACTIVE")
 
 st.write("")
 
-# WORKSPACE
-left, right = st.columns([1, 1.8])
+# --- WORKSPACE ---
+l_col, r_col = st.columns([1, 1.8])
 
-with left:
+with l_col:
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     st.write("### 📊 Market Snapshot")
-    if not df.empty:
-        # Balikin Logika Warna Merah/Hijau di Tabel
-        def color_pick(val):
+    if not df_market.empty:
+        # Indikator warna teks
+        def color_logic(val):
             color = '#10b981' if '+' in val else '#ef4444'
             return f'color: {color}'
-        st.dataframe(df.style.map(color_pick, subset=['24H %']), use_container_width=True, hide_index=True, height=450)
+        st.dataframe(df_market.style.map(color_logic, subset=['24H %']), use_container_width=True, hide_index=True, height=450)
     else:
-        st.info("Awaiting connection...")
+        st.warning("Fetching data stream... Please wait.")
     st.markdown('</div>', unsafe_allow_html=True)
 
-with right:
+with r_col:
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     st.write("### 📈 Live Chart")
-    tv_v63 = f'''
-    <div id="tv_v63"></div>
+    tv_code = f'''
+    <div id="tv_v94"></div>
     <script src="https://s3.tradingview.com/tv.js"></script>
     <script>
     new TradingView.widget({{
       "width": "100%", "height": 450, "symbol": "BINANCE:BTCUSDT",
       "interval": "60", "theme": "dark", "style": "1", "locale": "en",
-      "container_id": "tv_v63", "allow_symbol_change": true
+      "container_id": "tv_v94", "allow_symbol_change": true
     }});
     </script>
     '''
-    components.html(tv_v63, height=460)
+    components.html(tv_code, height=460)
     st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("<div style='text-align:center; color:#1e293b; font-size:10px; margin-top:20px;'>© 2026 METAVERSEINDO</div>", unsafe_allow_html=True)
+st.markdown("<div style='text-align:center;color:#1e293b;font-size:10px;margin-top:20px;'>© 2026 METAVERSEINDO</div>", unsafe_allow_html=True)
