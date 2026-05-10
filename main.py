@@ -5,62 +5,59 @@ import pytz
 from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
 
-# 1. PAGE SETUP
 st.set_page_config(page_title="META INDO PRO", layout="wide")
 st_autorefresh(interval=30000, key="freshengine")
 
-# 2. CSS TERMINAL
-st.markdown("""
-    <style>
-    header, footer, #MainMenu {visibility: hidden;}
-    .stApp { background-color: #020617; }
-    .glow { color: #10b981; text-shadow: 0 0 15px #10b981; text-align: center; }
-    </style>
-    """, unsafe_allow_html=True)
+# --- KONEKSI VVIP (BINANCE API KEY) ---
+# Ambil dari Streamlit Secrets (Dashboard Streamlit > Settings > Secrets)
+api_key = st.secrets.get("BINANCE_API_KEY", "")
+api_secret = st.secrets.get("BINANCE_SECRET_KEY", "")
 
-# 3. ENGINE (PASTI JALAN)
-@st.cache_data(ttl=30)
-def get_data():
+@st.cache_data(ttl=20)
+def get_vvip_data():
     url = "https://api.binance.com/api/v3/ticker/24hr"
+    headers = {"User-Agent": "Mozilla/5.0"}
+    
+    # Kalau API Key ada, kita kirim lewat header biar diprioritaskan Binance
+    if api_key:
+        headers["X-MBX-APIKEY"] = api_key
+
     try:
-        res = requests.get(url, timeout=5)
+        res = requests.get(url, headers=headers, timeout=10)
         data = res.json()
         rows = []
         for item in data:
             if item['symbol'].endswith('USDT'):
                 v = float(item['quoteVolume'])
-                if v > 10000000: # Cuma ambil koin volume $10M+
+                if v > 5000000:
                     rows.append({
                         "SYMBOL": item['symbol'].replace('USDT', ''),
                         "PRICE": float(item['lastPrice']),
-                        "24H %": float(item['priceChangePercent']),
+                        "CHANGE": float(item['priceChangePercent']),
                         "VOL_RAW": v,
                         "VOLUME": f"$ {v:,.0f}"
                     })
         df = pd.DataFrame(rows).sort_values("VOL_RAW", ascending=False).head(20)
-        return df.drop(columns=['VOL_RAW']), "LIVE"
+        return df.drop(columns=['VOL_RAW']), "VVIP LIVE"
     except:
-        # DATA STANDBY - Gue rapihin total biar GAK ADA ERROR LAGI
         backup = [
-            {"SYMBOL": "BTC", "PRICE": 65000.0, "24H %": 1.5, "VOLUME": "$ 30,000,000,000"},
-            {"SYMBOL": "ETH", "PRICE": 3500.0, "24H %": -0.5, "VOLUME": "$ 15,000,000,000"},
-            {"SYMBOL": "SOL", "PRICE": 145.0, "24H %": 4.0, "VOLUME": "$ 5,000,000,000"}
+            {"SYMBOL": "BTC", "PRICE": 65000.0, "CHANGE": 1.5, "VOLUME": "$ 30B+"},
+            {"SYMBOL": "ETH", "PRICE": 3500.0, "CHANGE": -0.5, "VOLUME": "$ 15B+"}
         ]
         return pd.DataFrame(backup), "STANDBY"
 
-# 4. TAMPILAN
-st.markdown('<h1 class="glow">📊 META INDO TERMINAL</h1>', unsafe_allow_html=True)
+st.markdown('<h2 style="text-align:center;color:#10b981;">📊 META INDO PRO TERMINAL</h2>', unsafe_allow_html=True)
 
-df, mode = get_data()
+df, mode = get_vvip_data()
 
 st.dataframe(
     df,
     column_config={
         "PRICE": st.column_config.NumberColumn("PRICE", format="$%.2f"),
-        "24H %": st.column_config.NumberColumn("CHANGE", format="%+.2f%%"),
+        "CHANGE": st.column_config.NumberColumn("24H %", format="%+.2f%%"),
     },
     use_container_width=True,
     hide_index=True
 )
 
-st.caption(f"Status: {mode} | {datetime.now(pytz.timezone('Asia/Jakarta')).strftime('%H:%M:%S')} WIB")
+st.caption(f"Status: {mode} | Sync: {datetime.now(pytz.timezone('Asia/Jakarta')).strftime('%H:%M:%S')} WIB")
