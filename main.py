@@ -29,7 +29,7 @@ with st.sidebar:
     exchange_choice = st.selectbox("Pilih Exchange:", ["KuCoin", "Binance"])
     auto_refresh = st.toggle("Auto-refresh (30s)", value=True)
     st.markdown("---")
-    st.info("Tips: Gunakan KuCoin jika Binance sedang memblokir IP server.")
+    st.info("Gunakan KuCoin jika Binance memblokir IP.")
 
 # --- 4. FUNGSI AMBIL DATA ---
 def fetch_crypto_data(ex_name):
@@ -50,21 +50,20 @@ def fetch_crypto_data(ex_name):
                 })
         return rows
     except Exception as e:
-        st.error(f"Error: {e}")
+        st.error(f"API Error: {e}")
         return []
 
 # --- 5. HEADER (FIXED: st.columns(2)) ---
-# Di sini baris 57 yang error tadi. Sekarang sudah ada angka 2.
 col_h1, col_h2 = st.columns(2) 
 with col_h1:
     st.title("📈 CRYPTO NEON")
-    st.caption(f"Source: {exchange_choice} | Python 3.14 Fix")
+    st.caption(f"Source: {exchange_choice} | Stable 3.14")
 with col_h2:
     if st.button("🔄 Force Refresh"):
         st.rerun()
 
 # --- 6. MAIN ENGINE ---
-with st.spinner("🚀 Syncing with Blockchain..."):
+with st.spinner("🚀 Syncing..."):
     data = fetch_crypto_data(exchange_choice)
 
 if len(data) > 0:
@@ -86,7 +85,8 @@ if len(data) > 0:
 
     st.markdown("---")
 
-    # --- TABLE & CHART (FIXED: st.columns()) ---
+    # --- TABLE & CHART (FIXED BARIS 90: st.columns()) ---
+    # Ini yang tadi bikin lu dapet TypeError. Sekarang udah ada spec-nya!
     col_table, col_chart = st.columns()
     
     with col_table:
