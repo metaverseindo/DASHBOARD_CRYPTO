@@ -2,46 +2,57 @@ import streamlit as st
 import pandas as pd
 import ccxt
 
-# 1. Pastikan config di paling atas
-st.set_page_config(page_title="Crypto Neon", layout="wide")
+# 1. KONFIGURASI AWAL
+st.set_page_config(page_title="Crypto Dashboard", layout="wide")
 
-# 2. Fungsi ambil data yang simpel
-def ambil_data():
+# 2. AMBIL DATA DARI API
+def get_crypto_data():
     try:
-        ex = ccxt.kucoin()
-        tickers = ex.fetch_tickers()
-        return [{"Coin": s.split('/'), "Price": v['last'], "Vol": v['quoteVolume']} 
-                for s, v in tickers.items() if '/USDT' in s]
+        # Pake Kucoin biar lebih stabil di cloud
+        exchange = ccxt.kucoin()
+        tickers = exchange.fetch_tickers()
+        data_list = []
+        for symbol, val in tickers.items():
+            if '/USDT' in symbol:
+                data_list.append({
+                    "Koin": symbol.split('/'),
+                    "Harga": val['last'],
+                    "Volume": val['quoteVolume']
+                })
+        return data_list
     except:
         return []
 
-# 3. Baris 57 (Yang sering error) - Gue isi angka 2
-c1, c2 = st.columns(2) 
-with c1:
-    st.title("⚡ CRYPTO DASHBOARD")
-with c2:
-    if st.button("🔄 Refresh Data"):
+# 3. HEADER (PAKAI ANGKA 1 BIAR GAK ERROR)
+header_col = st.columns(1)
+with header_col:
+    st.title("📈 CRYPTO DASHBOARD")
+    if st.button("🔄 REFRESH DATA"):
         st.rerun()
 
-# 4. Engine utama
-data = ambil_data()
+# 4. ENGINE UTAMA
+data = get_crypto_data()
+
 if data:
-    df = pd.DataFrame(data).sort_values("Vol", ascending=False)
+    df = pd.DataFrame(data).sort_values("Volume", ascending=False)
     
-    # Metrics - Gue isi angka 3
-    cols = st.columns(3)
-    top_coins = ["BTC", "ETH", "SOL"]
-    for i, coin in enumerate(top_coins):
-        row = df[df['Coin'] == coin]
-        if not row.empty:
-            cols[i].metric(coin, f"${row.iloc['Price']}")
+    # METRICS (PAKAI ANGKA 3 BIAR GAK ERROR)
+    col1, col2, col3 = st.columns(3)
+    
+    # Cari data BTC, ETH, SOL
+    btc = df[df['Koin'] == 'BTC']
+    eth = df[df['Koin'] == 'ETH']
+    sol = df[df['Koin'] == 'SOL']
+    
+    if not btc.empty: col1.metric("BTC/USDT", f"${btc.iloc['Harga']:,.2f}")
+    if not eth.empty: col2.metric("ETH/USDT", f"${eth.iloc['Harga']:,.2f}")
+    if not sol.empty: col3.metric("SOL/USDT", f"${sol.iloc['Harga']:,.2f}")
 
     st.divider()
 
-    # Layout bawah - Gue isi list biar aman
-    full_col = st.columns()
-    with full_col:
-        st.subheader("📊 Market Top 20")
-        st.dataframe(df.head(20), use_container_width=True)
+    # TABEL (PAKAI ANGKA 1 BIAR GAK ERROR 'SPEC')
+    st.subheader("📊 Market Overview (Top 50 Volume)")
+    st.dataframe(df.head(50), use_container_width=True, height=600)
+
 else:
-    st.error("Gagal ambil data API. Coba lagi nanti.")
+    st.error("Gagal koneksi ke API Exchange. Coba klik refresh.")
