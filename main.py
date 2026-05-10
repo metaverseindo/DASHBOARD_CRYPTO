@@ -6,7 +6,7 @@ from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
 
 # 1. SETUP
-st.set_page_config(page_title="META INDO PRO", layout="wide")
+st.set_page_config(page_title="metaverseindo Dashboard", layout="wide")
 st_autorefresh(interval=30000, key="freshengine")
 
 # 2. STYLE SULTAN
