@@ -29,7 +29,7 @@ with st.sidebar:
     exchange_choice = st.selectbox("Pilih Exchange:", ["KuCoin", "Binance"])
     auto_refresh = st.toggle("Auto-refresh (30s)", value=True)
     st.markdown("---")
-    st.info("Gunakan KuCoin jika Binance memblokir IP.")
+    st.info("Tips: Gunakan KuCoin jika Binance sedang memblokir IP server.")
 
 # --- 4. FUNGSI AMBIL DATA ---
 def fetch_crypto_data(ex_name):
@@ -50,33 +50,34 @@ def fetch_crypto_data(ex_name):
                 })
         return rows
     except Exception as e:
-        st.error(f"API Error: {e}")
+        st.error(f"Error: {e}")
         return []
 
-# --- 5. HEADER (FIXED: Menggunakan Indexing dan) ---
-header_cols = st.columns() 
-with header_cols: # <-- Pake index 0 buat kolom pertama
+# --- 5. HEADER (FIXED: st.columns(2)) ---
+# Di sini baris 57 yang error tadi. Sekarang sudah ada angka 2.
+col_h1, col_h2 = st.columns(2) 
+with col_h1:
     st.title("📈 CRYPTO NEON")
-    st.caption(f"Source: {exchange_choice} | Stable 3.14")
-with header_cols: # <-- Pake index 1 buat kolom kedua
+    st.caption(f"Source: {exchange_choice} | Python 3.14 Fix")
+with col_h2:
     if st.button("🔄 Force Refresh"):
         st.rerun()
 
 # --- 6. MAIN ENGINE ---
-with st.spinner("🚀 Syncing..."):
+with st.spinner("🚀 Syncing with Blockchain..."):
     data = fetch_crypto_data(exchange_choice)
 
 if len(data) > 0:
     df = pd.DataFrame(data)
     df = df.sort_values("Volume", ascending=False).reset_index(drop=True)
 
-    # --- TOP METRICS ---
+    # --- TOP METRICS (FIXED: st.columns(3)) ---
     m_cols = st.columns(3)
     tickers_to_show = ["BTC", "ETH", "SOL"]
     for i, sym in enumerate(tickers_to_show):
         row = df[df['Koin'] == sym]
         if not row.empty:
-            with m_cols[i]: # <-- Pake index i
+            with m_cols[i]:
                 st.metric(
                     label=f"{sym}/USDT", 
                     value=f"${row.iloc['Harga']:,.2f}", 
@@ -85,10 +86,10 @@ if len(data) > 0:
 
     st.markdown("---")
 
-    # --- TABLE & CHART ---
-    main_layout_cols = st.columns()
+    # --- TABLE & CHART (FIXED: st.columns()) ---
+    col_table, col_chart = st.columns()
     
-    with main_layout_cols: # <-- Kolom Kiri (Tabel)
+    with col_table:
         st.subheader("📊 Market Overview")
         search = st.text_input("🔍 Search Coin...", "").upper()
         df_display = df[df['Koin'].str.contains(search)] if search else df.head(50)
@@ -107,7 +108,7 @@ if len(data) > 0:
             hide_index=True
         )
 
-    with main_layout_cols: # <-- Kolom Kanan (Chart)
+    with col_chart:
         st.subheader("🔥 Top 10 Vol")
         top_10 = df.head(10)
         fig = go.Figure(go.Bar(
