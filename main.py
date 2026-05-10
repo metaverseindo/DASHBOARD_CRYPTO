@@ -3,8 +3,8 @@ import pandas as pd
 import ccxt
 from datetime import datetime
 
-# 1. CONFIG (Harus paling atas)
-st.set_page_config(page_title="META INDO DAHSBOARD", layout="wide", initial_sidebar_state="collapsed")
+# 1. CONFIG (Wajib paling atas)
+st.set_page_config(page_title="META INDO", layout="wide", initial_sidebar_state="collapsed")
 
 # 2. INJECT TAILWIND & CLEAN UI
 st.markdown("""
@@ -35,33 +35,34 @@ st.markdown("""
 # 3. FUNGSI AMBIL DATA
 def get_data():
     try:
-        # Pake Kucoin biar gak gampang kena block IP
+        # Pake Kucoin biar stabil
         ex = ccxt.kucoin({'enableRateLimit': True})
         tickers = ex.fetch_tickers()
         return [{"Koin": s.split('/'), "Harga": v['last'], "Vol": v['quoteVolume'], "Change": v['percentage'] or 0.0} 
                 for s, v in tickers.items() if '/USDT' in s]
     except Exception as e:
-        st.error(f"Koneksi Bermasalah: {e}")
         return []
 
-# 4. HEADER META INDO
+# 4. HEADER META INDO - LOGO 📊
 st.markdown("""
     <div class="flex justify-between items-center bg-slate-900/80 p-6 rounded-2xl border border-slate-800 mb-8">
         <div>
-            <h1 class="text-4xl font-black text-emerald-400 tracking-tighter">⚡ META INDO</h1>
+            <h1 class="text-4xl font-black text-emerald-400 tracking-tighter">📊 META INDO</h1>
             <p class="text-slate-400 text-sm font-medium uppercase tracking-widest">Crypto Analytics Terminal</p>
         </div>
         <div class="text-right">
-            <p class="text-slate-500 text-xs font-mono">SYSTEM READY</p>
-            <p class="text-emerald-500 text-xs font-mono">ONLINE</p>
+            <p class="text-slate-500 text-xs font-mono">DATA STREAM</p>
+            <p class="text-emerald-500 text-xs font-mono">ACTIVE</p>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-# Tombol Refresh yang lebih pakem
-if st.button("🔄 SYNC DATA SEKARANG"):
-    st.cache_data.clear() # Bersihin cache biar beneran update
-    st.rerun()
+# Tombol Refresh
+col_btn = st.columns()
+with col_btn:
+    if st.button("🔄 SYNC DATA"):
+        st.cache_data.clear()
+        st.rerun()
 
 # 5. ENGINE UTAMA
 data = get_data()
@@ -69,7 +70,7 @@ data = get_data()
 if data:
     df = pd.DataFrame(data).sort_values("Vol", ascending=False)
     
-    # METRICS (Python 3.14 Safe)
+    # METRICS
     m_cols = st.columns(3)
     coins = ["BTC", "ETH", "SOL"]
     
@@ -88,7 +89,6 @@ if data:
     # 6. DATA TABLE
     st.markdown("<h2 class='text-xl font-bold text-slate-200 mb-4 px-2'>📊 Market Movement</h2>", unsafe_allow_html=True)
     
-    # Menampilkan tabel
     st.dataframe(
         df.head(50),
         use_container_width=True,
@@ -101,6 +101,3 @@ if data:
 
 else:
     st.warning("Menunggu data dari provider... Coba klik Sync Data.")
-
-# 7. AUTO-REFRESH SCRIPT (Optional: Refresh otomatis tiap 1 menit)
-# st.empty()
