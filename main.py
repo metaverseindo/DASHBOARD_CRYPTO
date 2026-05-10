@@ -6,11 +6,11 @@ import pytz
 # 1. INITIAL SETUP
 st.set_page_config(page_title="metaverseindo", layout="wide", initial_sidebar_state="collapsed")
 
-# 2. jam Real-time logic (WIB)
+# 2. JAM REAL-TIME (WIB)
 tz = pytz.timezone('Asia/Jakarta')
 time_now = datetime.now(tz).strftime("%H:%M:%S")
 
-# 3. CSS CUSTOM (Ultra-Clean, No Versioning)
+# 3. CSS CUSTOM (Ultra-Clean)
 st.markdown(r'''
     <style>
     header, footer, #MainMenu {visibility: hidden;}
@@ -28,8 +28,8 @@ st.markdown(r'''
         color: #10b981; font-weight: 900; font-size: 28px; letter-spacing: 1px;
     }
     .live-clock {
-        color: #10b981; font-family: 'Courier New', Courier, monospace;
-        font-weight: bold; font-size: 20px;
+        color: #10b981; font-family: monospace;
+        font-weight: bold; font-size: 22px;
     }
     .card-panel { 
         background-color: rgba(15, 23, 42, 0.8); 
@@ -47,22 +47,21 @@ st.markdown(f'''
     </div>
     ''', unsafe_allow_html=True)
 
-# 5. MAIN LAYOUT
+# 5. MAIN LAYOUT (FIXED BARIS 51)
+# Gue kasih rasio biar kolom kiri lebih ramping, kanan buat chart luas
 col_left, col_right = st.columns()
 
 with col_left:
     st.markdown('<div class="card-panel">', unsafe_allow_html=True)
-    # WIDGET KIRI: Market Quotes (Lebih enak buat dipantau)
+    # WIDGET KIRI: Market Quotes
     market_quotes = '''
     <div class="tradingview-widget-container">
       <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js" async>
       {
-      "width": "100%",
-      "height": "750",
+      "width": "100%", "height": "750",
       "symbolsGroups": [
         {
           "name": "Crypto",
-          "originalName": "Forex",
           "symbols": [
             {"name": "BINANCE:BTCUSDT"},
             {"name": "BINANCE:ETHUSDT"},
@@ -74,10 +73,7 @@ with col_left:
           ]
         }
       ],
-      "showSymbolLogo": true,
-      "colorTheme": "dark",
-      "isTransparent": true,
-      "locale": "en"
+      "showSymbolLogo": true, "colorTheme": "dark", "isTransparent": true, "locale": "en"
     }
       </script>
     </div>
@@ -87,22 +83,18 @@ with col_left:
 
 with col_right:
     st.markdown('<div class="card-panel">', unsafe_allow_html=True)
-    # WIDGET KANAN: Advanced Chart (Udah ada Search Box & Symbol Change di dalem)
-    # Jadi lu bisa langsung ganti pair tanpa keluar dari dashboard
+    # WIDGET KANAN: Advanced Chart (Bisa ganti pair di dalem)
     tv_chart = '''
     <div id="tradingview_final"></div>
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <script type="text/javascript">
     new TradingView.widget({
-      "width": "100%",
-      "height": "750",
+      "width": "100%", "height": "750",
       "symbol": "BINANCE:BTCUSDT",
       "interval": "1",
       "timezone": "Asia/Jakarta",
       "theme": "dark",
-      "style": "1",
-      "locale": "en",
-      "toolbar_bg": "#f1f3f6",
+      "style": "1", "locale": "en",
       "enable_publishing": false,
       "allow_symbol_change": true,
       "hide_side_toolbar": false,
@@ -113,5 +105,4 @@ with col_right:
     components.html(tv_chart, height=760)
     st.markdown('</div>', unsafe_allow_html=True)
 
-# FOOTER TANPA TEKS VERSI
-st.markdown("<div style='text-align:center; color:#334155; font-size:10px; margin-top:10px;'>METAVERSEINDO TERMINAL</div>", unsafe_allow_html=True)
+st.markdown("<div style='text-align:center; color:#334155; font-size:10px; margin-top:10px;'>METAVERSEINDO TERMINAL | 2026</div>", unsafe_allow_html=True)
