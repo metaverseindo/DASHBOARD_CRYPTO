@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import ccxt
 from datetime import datetime
+import pytz # Tambahin ini buat urusan timezone
 
 # 1. CONFIG
 st.set_page_config(page_title="META INDO", layout="wide", initial_sidebar_state="collapsed")
@@ -24,8 +25,16 @@ def get_data():
     try:
         ex = ccxt.kucoin({'enableRateLimit': True})
         t = ex.fetch_tickers()
-        return [{"Koin": s.split('/'), "Harga": v['last'], "Vol": v['quoteVolume'], "Change": v['percentage'] or 0.0} 
-                for s, v in t.items() if '/USDT' in s]
+        rows = []
+        for s, v in t.items():
+            if '/USDT' in s:
+                rows.append({
+                    "Koin": s.split('/'),
+                    "Harga": v['last'],
+                    "Vol": v['quoteVolume'],
+                    "Change": v['percentage'] or 0.0
+                })
+        return rows
     except: return []
 
 # 4. HEADER
@@ -38,7 +47,7 @@ st.markdown("""
     </div>
     """, unsafe_allow_html=True)
 
-# 5. BUTTON REFRESH (Pake cara paling basic biar gak error)
+# 5. BUTTON REFRESH
 if st.button("🔄 SYNC DATA SEKARANG"):
     st.cache_data.clear()
     st.rerun()
@@ -49,26 +58,31 @@ data = get_data()
 if data:
     df = pd.DataFrame(data).sort_values("Vol", ascending=False)
     
-    # METRICS - Langsung buat 3 kolom dan isi satu-satu
-    c1, c2, c3 = st.columns(3)
+    # METRICS
+    col1, col2, col3 = st.columns(3)
     
-    coins = ["BTC", "ETH", "SOL"]
-    for i, sym in enumerate(coins):
-        row = df[df['Koin'] == sym]
-        if not row.empty:
-            target_col = [c1, c2, c3][i]
-            target_col.metric(
-                label=f"{sym} Market", 
-                value=f"${row.iloc['Harga']:,.2f}", 
-                delta=f"{row.iloc['Change']:+.2f}%"
-            )
+    btc_row = df[df['Koin'] == 'BTC']
+    if not btc_row.empty:
+        col1.metric("BTC Market", f"${btc_row.iloc['Harga']:,.2f}", f"{btc_row.iloc['Change']:+.2f}%")
+    
+    eth_row = df[df['Koin'] == 'ETH']
+    if not eth_row.empty:
+        col2.metric("ETH Market", f"${eth_row.iloc['Harga']:,.2f}", f"{eth_row.iloc['Change']:+.2f}%")
+        
+    sol_row = df[df['Koin'] == 'SOL']
+    if not sol_row.empty:
+        col3.metric("SOL Market", f"${sol_row.iloc['Harga']:,.2f}", f"{sol_row.iloc['Change']:+.2f}%")
 
     st.divider()
 
     # 7. TABLE
     st.markdown("<h2 class='text-xl font-bold text-slate-200 mb-4 px-2'>📊 Market Movement</h2>", unsafe_allow_html=True)
     st.dataframe(df.head(50), use_container_width=True, height=550, hide_index=True)
-    st.caption(f"Last sync: {datetime.now().strftime('%H:%M:%S')} WIB")
+    
+    # --- BAGIAN FIX JAM WIB ---
+    tz_jakarta = pytz.timezone('Asia/Jakarta')
+    waktu_sekarang = datetime.now(tz_jakarta).strftime('%H:%M:%S')
+    st.caption(f"Last sync: {waktu_sekarang} WIB (Waktu Indonesia Barat)")
 
 else:
     st.warning("Data belum masuk. Klik Sync Data.")
