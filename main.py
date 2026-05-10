@@ -4,12 +4,12 @@ import ccxt
 
 # 1. KONFIGURASI (Harus paling atas sebelum markdown)
 st.set_page_config(
-    page_title="Crypto Neon Dashboard",
+    page_title="Crypto Metaverse Dashboard",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# 2. CUSTOM CSS (Smooth Scroll + Hide GitHub UI + Neon Theme)
+# 2. CUSTOM CSS (Smooth Scroll + Hide GitHub UI + Metaverse Theme)
 st.markdown("""
     <style>
     /* Smooth Scroll */
@@ -51,7 +51,7 @@ def get_crypto_data():
         return []
 
 # 4. HEADER
-st.title("⚡ CRYPTO NEON TERMINAL")
+st.title("⚡ CRYPTO METAVERSEINDO")
 if st.button("🔄 REFRESH DATA"):
     st.rerun()
 
