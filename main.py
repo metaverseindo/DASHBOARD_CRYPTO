@@ -2,6 +2,17 @@ import streamlit as st
 import pandas as pd
 import ccxt
 
+st.set_page_config(
+    page_title="Crypto Dashboard",
+    layout="wide",
+    initial_sidebar_state="collapsed",
+    menu_items={
+        'Get Help': None,
+        'Report a bug': None,
+        'About': None
+    }
+)
+
 # 1. KONFIGURASI
 st.set_page_config(page_title="Crypto Dashboard", layout="wide")
 
