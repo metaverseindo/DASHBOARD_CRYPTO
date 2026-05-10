@@ -69,7 +69,15 @@ def fetch_crypto_data(ex_name):
         return []
 
 # --- 5. HEADER DASHBOARD ---
+# Ganti ini:
 col_h1, col_h2 = st.columns()
+
+# Menjadi ini (Isi angka 2 untuk dua kolom):
+col_h1, col_h2 = st.columns(2)
+
+# ATAU kalau mau kolom kiri lebih lebar (seperti kode gue sebelumnya):
+col_h1, col_h2 = st.columns()
+
 with col_h1:
     st.title("📈 CRYPTO NEON DASHBOARD")
     st.caption(f"Data Source: {exchange_choice} API | Real-time Analysis")
