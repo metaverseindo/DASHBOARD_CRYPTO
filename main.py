@@ -34,8 +34,8 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# 4. DATA ENGINE (Ambil data dari KuCoin via CCXT)
-@st.cache_data(ttl=9) # Cache dikit di bawah durasi refresh biar gak berat
+# 4. DATA ENGINE (Update: Tambah Kolom Nomor)
+@st.cache_data(ttl=9)
 def get_crypto_data():
     try:
         ex = ccxt.kucoin({'enableRateLimit': True})
@@ -49,11 +49,17 @@ def get_crypto_data():
                     "Vol": v['quoteVolume'],
                     "Change": v['percentage'] or 0.0
                 })
-        # Sort berdasarkan Volume terbesar (biar koin rame di atas)
-        return pd.DataFrame(rows).sort_values("Vol", ascending=False).head(50)
+        
+        # Sort & Ambil Top 50
+        df_result = pd.DataFrame(rows).sort_values("Vol", ascending=False).head(50)
+        
+        # TAMBAH NOMOR URUT:
+        df_result.insert(0, "No", range(1, len(df_result) + 1))
+        
+        return df_result
     except Exception as e:
         return pd.DataFrame()
-
+        
 # 5. HEADER META INDO
 st.markdown("""
     <div class="flex justify-between items-center bg-slate-900/80 p-6 rounded-2xl border border-slate-800 mb-6">
@@ -91,20 +97,35 @@ if not df.empty:
 
     st.markdown("<div class='my-6 border-b border-slate-800'></div>", unsafe_allow_html=True)
 
-    # 7. MAIN TABLE (FORMAT TITIK/KOMA & WARNA)
+    # 7. MAIN TABLE (Update: Formatting buat kolom "No")
+if not df.empty:
     st.markdown("<h2 class='text-xl font-bold text-slate-200 mb-4 px-2'>📊 Market Movement (Top 50 Vol)</h2>", unsafe_allow_html=True)
 
-    # Fungsi styling warna teks
     def style_rows(row):
-        # Change Positif = Ijo, Negatif = Merah
         change_color = '#10b981' if row['Change'] >= 0 else '#ef4444'
         styles = []
         for name in row.index:
             if name == 'Change':
                 styles.append(f'color: {change_color}; font-weight: 800;')
+            elif name == 'No':
+                styles.append('color: #64748b; text-align: center;') # Warna abu-abu buat nomor
             else:
-                styles.append('color: #cbd5e1;') # Warna abu-abu terang buat angka lain biar gak pusing
+                styles.append('color: #cbd5e1;')
         return styles
+
+    styled_df = df.style.format({
+        "No": "{:02d}",     # Format 01, 02, dst
+        "Harga": "${:,.4f}",
+        "Vol": "{:,.0f}",
+        "Change": "{:+.2f}%"
+    }).apply(style_rows, axis=1)
+
+    st.dataframe(
+        styled_df,
+        use_container_width=True, 
+        height=650, 
+        hide_index=True
+    )
 
     # Apply Format Ribuan & Desimal
     styled_df = df.style.format({
