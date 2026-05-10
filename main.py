@@ -29,7 +29,7 @@ with st.sidebar:
     exchange_choice = st.selectbox("Pilih Exchange:", ["KuCoin", "Binance"])
     auto_refresh = st.toggle("Auto-refresh (30s)", value=True)
     st.markdown("---")
-    st.info("Tips: Gunakan KuCoin jika Binance sedang memblokir IP server.")
+    st.info("Gunakan KuCoin jika Binance memblokir IP.")
 
 # --- 4. FUNGSI AMBIL DATA ---
 def fetch_crypto_data(ex_name):
@@ -50,15 +50,15 @@ def fetch_crypto_data(ex_name):
                 })
         return rows
     except Exception as e:
-        st.error(f"Error: {e}")
+        st.error(f"API Error: {e}")
         return []
 
-# --- 5. HEADER (FIXED: Dikasih angka 2) ---
-col_h1, col_h2 = st.columns(2) 
-with col_h1:
+# --- 5. HEADER (FIXED: st.columns(2)) ---
+header_cols = st.columns(2) 
+with header_cols:
     st.title("📈 CRYPTO NEON")
-    st.caption(f"Source: {exchange_choice} | Python 3.14 Stable")
-with col_h2:
+    st.caption(f"Source: {exchange_choice} | Build: 3.14.0-Stable")
+with header_cols:
     if st.button("🔄 Force Refresh"):
         st.rerun()
 
@@ -70,9 +70,10 @@ if len(data) > 0:
     df = pd.DataFrame(data)
     df = df.sort_values("Volume", ascending=False).reset_index(drop=True)
 
-    # --- TOP METRICS (FIXED: Dikasih angka 3) ---
+    # --- TOP METRICS (FIXED: st.columns(3)) ---
     m_cols = st.columns(3)
-    for i, sym in enumerate(["BTC", "ETH", "SOL"]):
+    tickers_to_show = ["BTC", "ETH", "SOL"]
+    for i, sym in enumerate(tickers_to_show):
         row = df[df['Koin'] == sym]
         if not row.empty:
             m_cols[i].metric(
@@ -83,10 +84,11 @@ if len(data) > 0:
 
     st.markdown("---")
 
-    # --- TABLE & CHART (FIXED: Baris 87 lu sekarang ada isinya!) ---
-    col_table, col_chart = st.columns()
+    # --- TABLE & CHART (FIXED: Baris 87/88 - st.columns()) ---
+    # Di sini letak masalahnya. Gue pake cara indexing biar lebih aman.
+    main_layout_cols = st.columns()
     
-    with col_table:
+    with main_layout_cols:
         st.subheader("📊 Market Overview")
         search = st.text_input("🔍 Search Coin...", "").upper()
         df_display = df[df['Koin'].str.contains(search)] if search else df.head(50)
@@ -105,7 +107,7 @@ if len(data) > 0:
             hide_index=True
         )
 
-    with col_chart:
+    with main_layout_cols:
         st.subheader("🔥 Top 10 Vol")
         top_10 = df.head(10)
         fig = go.Figure(go.Bar(
@@ -127,7 +129,7 @@ if len(data) > 0:
     st.caption(f"Last sync: {datetime.now().strftime('%H:%M:%S')}")
 
 else:
-    st.warning("⚠️ Gagal narik data. Coba ganti exchange di sidebar.")
+    st.warning("⚠️ Data gagal ditarik. Ganti exchange atau coba lagi.")
 
 # --- 7. AUTO REFRESH ---
 if auto_refresh:
