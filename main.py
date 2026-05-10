@@ -6,11 +6,11 @@ import pytz
 # 1. INITIAL SETUP
 st.set_page_config(page_title="metaverseindo", layout="wide", initial_sidebar_state="collapsed")
 
-# 2. LOGIC JAM REAL-TIME (WIB)
+# 2. JAM REAL-TIME WIB
 tz = pytz.timezone('Asia/Jakarta')
 time_now = datetime.now(tz).strftime("%H:%M:%S")
 
-# 3. CSS CUSTOM (Ultra-Clean & Pro)
+# 3. CSS CUSTOM
 st.markdown(r'''
     <style>
     header, footer, #MainMenu {visibility: hidden;}
@@ -24,13 +24,8 @@ st.markdown(r'''
         align-items: center;
         margin-bottom: 20px;
     }
-    .brand-id { 
-        color: #10b981; font-weight: 900; font-size: 28px; letter-spacing: 1px;
-    }
-    .live-clock {
-        color: #10b981; font-family: 'Courier New', Courier, monospace;
-        font-weight: bold; font-size: 22px;
-    }
+    .brand-id { color: #10b981; font-weight: 900; font-size: 28px; letter-spacing: 1px; }
+    .live-clock { color: #10b981; font-family: monospace; font-weight: bold; font-size: 22px; }
     .card-panel { 
         background-color: rgba(15, 23, 42, 0.8); 
         border: 1px solid #1e293b; 
@@ -39,7 +34,7 @@ st.markdown(r'''
     </style>
     ''', unsafe_allow_html=True)
 
-# 4. NAVBAR (Identitas & Jam Sekarang)
+# 4. NAVBAR (IDENTITAS & JAM)
 st.markdown(f'''
     <div class="nav-bar-top">
         <div class="brand-id">METAVERSEINDO_</div>
@@ -47,12 +42,11 @@ st.markdown(f'''
     </div>
     ''', unsafe_allow_html=True)
 
-# 5. MAIN LAYOUT (FIXED: Sudah Ada Angka di Columns)
+# 5. MAIN LAYOUT (AUDITED BARIS 47: WAJIB ADA ISI)
 c_left, c_right = st.columns()
 
 with c_left:
     st.markdown('<div class="card-panel">', unsafe_allow_html=True)
-    st.markdown("<h6 style='color:#10b981; margin-bottom:10px;'>📊 Market Monitor</h6>", unsafe_allow_html=True)
     # WIDGET KIRI: Market Quotes
     market_quotes = '''
     <div class="tradingview-widget-container">
@@ -83,8 +77,7 @@ with c_left:
 
 with c_right:
     st.markdown('<div class="card-panel">', unsafe_allow_html=True)
-    st.markdown("<h6 style='color:#10b981; margin-bottom:10px;'>📈 Advanced Analysis</h6>", unsafe_allow_html=True)
-    # WIDGET KANAN: Advanced Chart (Udah Aktif Search & Symbol Change)
+    # WIDGET KANAN: Advanced Chart (Klik & Ganti Pair di Sini)
     tv_chart = '''
     <div id="tradingview_final"></div>
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
