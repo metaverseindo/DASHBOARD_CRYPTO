@@ -8,8 +8,8 @@ from streamlit_autorefresh import st_autorefresh
 # 1. CONFIG
 st.set_page_config(page_title="META INDO", layout="wide", initial_sidebar_state="collapsed")
 
-# 2. AUTO-REFRESH tiap 5 detik
-st_autorefresh(interval=5000, key="datarefresh")
+# Ganti dari 5000 (5 detik) ke 30000 (30 detik)
+st_autorefresh(interval=30000, key="datarefresh")
 
 # 3. STYLE & TAILWIND
 st.markdown("""
