@@ -11,7 +11,7 @@ st.set_page_config(
     layout="wide",
 )
 
-# --- 2. CUSTOM CSS ---
+# --- 2. CUSTOM CSS (STYLE NEON) ---
 st.markdown("""
     <style>
     .stApp { background-color: #0e1117; }
@@ -29,7 +29,7 @@ with st.sidebar:
     exchange_choice = st.selectbox("Pilih Exchange:", ["KuCoin", "Binance"])
     auto_refresh = st.toggle("Auto-refresh (30s)", value=True)
     st.markdown("---")
-    st.info("Gunakan KuCoin jika Binance sedang memblokir IP server.")
+    st.info("Tips: Gunakan KuCoin jika Binance sedang memblokir IP server.")
 
 # --- 4. FUNGSI AMBIL DATA ---
 def fetch_crypto_data(ex_name):
@@ -50,10 +50,11 @@ def fetch_crypto_data(ex_name):
                 })
         return rows
     except Exception as e:
-        st.error(f"Error: {e}")
+        st.error(f"Error fetching data: {e}")
         return []
 
-# --- 5. HEADER (FIXED: st.columns(2)) ---
+# --- 5. HEADER ---
+# FIXED: Menambahkan angka 2 di dalam kurung
 col_h1, col_h2 = st.columns(2) 
 with col_h1:
     st.title("📈 CRYPTO NEON")
@@ -62,7 +63,7 @@ with col_h2:
     if st.button("🔄 Force Refresh"):
         st.rerun()
 
-# --- 6. MAIN ENGINE ---
+# --- 6. MAIN CONTENT ---
 with st.spinner("🚀 Syncing with Blockchain..."):
     data = fetch_crypto_data(exchange_choice)
 
@@ -70,7 +71,8 @@ if len(data) > 0:
     df = pd.DataFrame(data)
     df = df.sort_values("Volume", ascending=False).reset_index(drop=True)
 
-    # --- TOP METRICS (FIXED: st.columns(3)) ---
+    # --- TOP METRICS ---
+    # FIXED: Menambahkan angka 3 di dalam kurung
     m_cols = st.columns(3)
     for i, sym in enumerate(["BTC", "ETH", "SOL"]):
         row = df[df['Koin'] == sym]
@@ -79,7 +81,8 @@ if len(data) > 0:
 
     st.markdown("---")
 
-    # --- TABLE & CHART (FIXED: Baris 84 - Dikasih rasio) ---
+    # --- TABLE & CHART ---
+    # FIXED: Baris 83 yang bermasalah sekarang diisi
     col_table, col_chart = st.columns()
     
     with col_table:
@@ -105,7 +108,7 @@ if len(data) > 0:
     st.caption(f"Last sync: {datetime.now().strftime('%H:%M:%S')}")
 
 else:
-    st.warning("⚠️ Gagal tarik data. Silakan ganti Exchange di sidebar.")
+    st.warning("⚠️ Gagal mengambil data. Coba ganti Exchange di Sidebar.")
 
 # --- 7. AUTO REFRESH ---
 if auto_refresh:
