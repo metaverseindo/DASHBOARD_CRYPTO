@@ -5,11 +5,11 @@ import pytz
 from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
 
-# 1. SETUP KUNCI
+# 1. PAGE SETUP
 st.set_page_config(page_title="META INDO PRO", layout="wide", initial_sidebar_state="collapsed")
 st_autorefresh(interval=30000, key="datarefresh")
 
-# 2. CSS SULTAN (TERMINAL MODE)
+# 2. CSS SULTAN (TERMINAL UI)
 st.markdown("""
     <style>
     header, footer, #MainMenu {visibility: hidden;}
@@ -24,7 +24,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# 3. PHANTOM ENGINE (DIRECT REQUEST)
+# 3. ENGINE PHANTOM (MULTI-GATEWAY)
 @st.cache_data(ttl=30)
 def fetch_phantom_data():
     endpoints = [
@@ -33,24 +33,22 @@ def fetch_phantom_data():
         "https://api3.binance.com/api/v3/ticker/24hr"
     ]
     
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    }
+    headers = {"User-Agent": "Mozilla/5.0"}
 
-    for url in endpoints:
-        try:
+    try:
+        for url in endpoints:
             res = requests.get(url, headers=headers, timeout=5)
             if res.status_code == 200:
                 data = res.json()
                 rows = []
                 for item in data:
-                    sym = item['symbol']
+                    sym = item.get('symbol', '')
                     if sym.endswith('USDT'):
                         coin = sym.replace('USDT', '')
-                        vol = float(item['quoteVolume'])
+                        vol = float(item.get('quoteVolume', 0))
                         if vol > 5000000:
-                            p = float(item['lastPrice'])
-                            c = float(item['priceChangePercent'])
+                            p = float(item.get('lastPrice', 0))
+                            c = float(item.get('priceChangePercent', 0))
                             rows.append({
                                 "RANK": 0,
                                 "ICON": f"https://www.google.com/s2/favicons?domain=https://coinmarketcap.com/currencies/{coin.lower()}/&sz=32",
@@ -61,22 +59,22 @@ def fetch_phantom_data():
                                 "VOLUME 24H": f"$ {vol:,.0f}",
                                 "TREND": [p * (1 + (c / 100) * (i / 5)) for i in range(6)]
                             })
-                df = pd.DataFrame(rows).sort_values("VOL_RAW", ascending=False).head(20)
-                df["RANK"] = range(1, len(df) + 1)
-                return df[["RANK", "ICON", "SYMBOL", "PRICE", "CHANGE", "VOLUME 24H", "TREND"]], "STABLE"
-        except:
-            continue
+                if rows:
+                    df = pd.DataFrame(rows).sort_values("VOL_RAW", ascending=False).head(20)
+                    df["RANK"] = range(1, len(df) + 1)
+                    return df[["RANK", "ICON", "SYMBOL", "PRICE", "CHANGE", "VOLUME 24H", "TREND"]], "STABLE"
+    except Exception:
+        pass # Lanjut ke Standby jika semua API gagal
             
-    # --- JALUR TERAKHIR: DATA STANDBY (FIXED TREND VALUES) ---
+    # --- JALUR STANDBY (DATA CADANGAN JIKA API BLOKIR) ---
     mock_data = [
         {"RANK": 1, "ICON": "https://www.google.com/s2/favicons?domain=bitcoin.org", "SYMBOL": "BTC", "PRICE": 65432.10, "CHANGE": 1.5, "VOLUME 24H": "$ 32,450,120,000", "TREND":},
         {"RANK": 2, "ICON": "https://www.google.com/s2/favicons?domain=ethereum.org", "SYMBOL": "ETH", "PRICE": 3456.78, "CHANGE": -0.8, "VOLUME 24H": "$ 15,200,450,000", "TREND":},
-        {"RANK": 3, "ICON": "https://www.google.com/s2/favicons?domain=solana.com", "SYMBOL": "SOL", "PRICE": 145.50, "CHANGE": 4.2, "VOLUME 24H": "$ 5,100,200,000", "TREND":},
-        {"RANK": 4, "ICON": "https://www.google.com/s2/favicons?domain=bnbchain.org", "SYMBOL": "BNB", "PRICE": 590.20, "CHANGE": 0.5, "VOLUME 24H": "$ 2,300,100,000", "TREND":}
+        {"RANK": 3, "ICON": "https://www.google.com/s2/favicons?domain=solana.com", "SYMBOL": "SOL", "PRICE": 145.50, "CHANGE": 4.2, "VOLUME 24H": "$ 5,100,200,000", "TREND":}
     ]
     return pd.DataFrame(mock_data), "STANDBY"
 
-# 4. RENDER
+# 4. RENDER UI
 st.markdown('<h1 class="glow-header">📊 META INDO PRO TERMINAL</h1>', unsafe_allow_html=True)
 
 df, status = fetch_phantom_data()
@@ -103,4 +101,4 @@ if not df.empty:
     else:
         st.warning(f"🟡 CONNECTION: LIMITED (Standby Mode) | SYNC: {now} WIB")
 else:
-    st.error("📡 Signal Lost. Terminal in Emergency Lockdown.")
+    st.error("📡 Signal Lost. Emergency lockdown active.")
