@@ -11,7 +11,7 @@ st.set_page_config(
     layout="wide",
 )
 
-# --- 2. CUSTOM CSS (CYBERPUNK STYLE) ---
+# --- 2. CUSTOM CSS ---
 st.markdown("""
     <style>
     .stApp { background-color: #0e1117; }
@@ -79,8 +79,7 @@ if len(data) > 0:
 
     st.markdown("---")
 
-    # --- TABLE & CHART (FIXED: Baris 83 - st.columns()) ---
-    # Di sini letak perbaikannya: Kita kasih angka di dalam kurung!
+    # --- TABLE & CHART (FIXED: Baris 84 - st.columns()) ---
     col_table, col_chart = st.columns()
     
     with col_table:
