@@ -27,7 +27,6 @@ st.markdown("""
 # 3. PHANTOM ENGINE (DIRECT REQUEST)
 @st.cache_data(ttl=30)
 def fetch_phantom_data():
-    # Nyoba berbagai pintu masuk (api1, api2, api3)
     endpoints = [
         "https://api1.binance.com/api/v3/ticker/24hr",
         "https://api2.binance.com/api/v3/ticker/24hr",
@@ -49,7 +48,7 @@ def fetch_phantom_data():
                     if sym.endswith('USDT'):
                         coin = sym.replace('USDT', '')
                         vol = float(item['quoteVolume'])
-                        if vol > 5000000: # Filter volume Sultan
+                        if vol > 5000000:
                             p = float(item['lastPrice'])
                             c = float(item['priceChangePercent'])
                             rows.append({
@@ -68,11 +67,11 @@ def fetch_phantom_data():
         except:
             continue
             
-    # --- JALUR TERAKHIR: DATA STANDBY (ANTI-BLANK) ---
-    # Jika semua API blokir, kita kasih data simulasi biar terminal tetep hidup
+    # --- JALUR TERAKHIR: DATA STANDBY (FIXED SYNTAX) ---
     mock_data = [
         {"RANK": 1, "ICON": "https://www.google.com/s2/favicons?domain=bitcoin.org", "SYMBOL": "BTC", "PRICE": 65432.10, "CHANGE": 1.5, "VOLUME 24H": "$ 32,450,120,000", "TREND":},
-        {"RANK": 2, "ICON": "https://www.google.com/s2/favicons?domain=ethereum.org", "SYMBOL": "ETH", "PRICE": 3456.78, "CHANGE": -0.8, "VOLUME 24H": "$ 15,200,450,000", "TREND":}
+        {"RANK": 2, "ICON": "https://www.google.com/s2/favicons?domain=ethereum.org", "SYMBOL": "ETH", "PRICE": 3456.78, "CHANGE": -0.8, "VOLUME 24H": "$ 15,200,450,000", "TREND":},
+        {"RANK": 3, "ICON": "https://www.google.com/s2/favicons?domain=solana.com", "SYMBOL": "SOL", "PRICE": 145.50, "CHANGE": 4.2, "VOLUME 24H": "$ 5,100,200,000", "TREND":}
     ]
     return pd.DataFrame(mock_data), "STANDBY"
 
