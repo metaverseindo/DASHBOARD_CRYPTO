@@ -56,7 +56,7 @@ def fetch_crypto_data(ex_name):
 # --- 5. HEADER (FIXED: st.columns(2)) ---
 col_h1, col_h2 = st.columns(2) 
 with col_h1:
-    st.title("📈 CRYPTO NEON")
+    st.title("📈 CRYPTO Metaverse")
     st.caption(f"Source: {exchange_choice} | Python 3.14 Build")
 with col_h2:
     if st.button("🔄 Force Refresh"):
