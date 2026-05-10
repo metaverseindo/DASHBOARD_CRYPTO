@@ -5,11 +5,11 @@ from datetime import datetime
 import pytz
 from streamlit_autorefresh import st_autorefresh
 
-# 1. SETUP & REFRESH (15 detik)
+# 1. SETUP & AUTO REFRESH
 st.set_page_config(page_title="META INDO PRO", layout="wide", initial_sidebar_state="collapsed")
-st_autorefresh(interval=15000, key="datarefresh")
+st_autorefresh(interval=20000, key="datarefresh") # Interval agak dilonggarin ke 20s biar gak gampang limit
 
-# 2. CSS TERMINAL (SULTAN STYLE)
+# 2. CSS SULTAN STYLE
 st.markdown("""
     <style>
     header, footer, #MainMenu {visibility: hidden;}
@@ -17,37 +17,32 @@ st.markdown("""
     .glow-header {
         color: #10b981;
         text-shadow: 0 0 20px rgba(16, 185, 129, 0.6);
-        font-weight: 900;
-        text-align: center;
-        padding: 15px;
-        font-size: 30px;
+        font-weight: 900; text-align: center; padding: 15px; font-size: 30px;
     }
     [data-testid="stDataFrame"] td:nth-child(6) { 
-        text-align: right !important; 
-        color: #fbbf24 !important; 
-        font-weight: bold !important;
+        text-align: right !important; color: #fbbf24 !important; font-weight: bold !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. ROBUST DATA ENGINE (ROTASI EXCHANGE)
-@st.cache_data(ttl=12)
-def fetch_robust_data():
-    # Daftar exchange buat rotasi kalau satu overload
-    exchanges = [
-        ccxt.binance({'timeout': 7000, 'enableRateLimit': True}),
-        ccxt.kucoin({'timeout': 7000, 'enableRateLimit': True}),
-        ccxt.gateio({'timeout': 7000, 'enableRateLimit': True})
+# 3. ENGINE V34 (INFINITY CACHE)
+@st.cache_data(ttl=60, show_spinner=False) # Simpan data 60 detik buat jaga-jaga kalau limit
+def fetch_infinity_data():
+    # Daftar exchange cadangan
+    exchange_list = [
+        ('Binance', ccxt.binance({'timeout': 5000, 'enableRateLimit': True})),
+        ('KuCoin', ccxt.kucoin({'timeout': 5000, 'enableRateLimit': True})),
+        ('Gate.io', ccxt.gateio({'timeout': 5000, 'enableRateLimit': True}))
     ]
     
-    for ex in exchanges:
+    for name, ex in exchange_list:
         try:
             tickers = ex.fetch_tickers()
             rows = []
             for sym, v in tickers.items():
                 if '/USDT' in sym and v.get('last') and v.get('quoteVolume'):
-                    # Filter koin dengan volume di atas $1M biar gak berat
-                    if float(v['quoteVolume']) > 1000000:
+                    # Hanya ambil koin raksasa (Volume > 2M) biar stabil
+                    if float(v['quoteVolume']) > 2000000:
                         coin = sym.split('/')
                         p = float(v['last'])
                         c = float(v.get('percentage', 0) or 0)
@@ -60,26 +55,24 @@ def fetch_robust_data():
                             "PRICE": p,
                             "CHANGE": c,
                             "VOL_RAW": vol_val,
-                            "VOLUME 24H": f"$ {vol_val:,.0f}", # Format Sultan
+                            "VOLUME 24H": f"$ {vol_val:,.0f}",
                             "TREND": [p * (1 + (c / 100) * (i / 5)) for i in range(6)]
                         })
             
-            df = pd.DataFrame(rows)
-            if not df.empty:
-                df = df.sort_values("VOL_RAW", ascending=False).head(35)
+            if rows:
+                df = pd.DataFrame(rows).sort_values("VOL_RAW", ascending=False).head(25)
                 df["RANK"] = range(1, len(df) + 1)
-                return df[["RANK", "ICON", "SYMBOL", "PRICE", "CHANGE", "VOLUME 24H", "TREND"]]
+                return df[["RANK", "ICON", "SYMBOL", "PRICE", "CHANGE", "VOLUME 24H", "TREND"]], name
         except:
-            continue # Kalau satu error/overload, coba exchange berikutnya
-    return pd.DataFrame()
+            continue
+    return pd.DataFrame(), None
 
-# 4. HEADER UI
+# 4. UI RENDER
 st.markdown('<h1 class="glow-header">📊 META INDO PRO TERMINAL</h1>', unsafe_allow_html=True)
 
-df = fetch_robust_data()
+df, source = fetch_infinity_data()
 
 if not df.empty:
-    # 5. RENDER TABEL
     st.dataframe(
         df,
         column_config={
@@ -91,10 +84,11 @@ if not df.empty:
             "VOLUME 24H": st.column_config.TextColumn("VOLUME 24H", width=200),
             "TREND": st.column_config.LineChartColumn("TREND", width=160)
         },
-        use_container_width=True,
-        hide_index=True,
-        height=680
+        use_container_width=True, hide_index=True, height=600
     )
-    st.caption(f"Last Sync: {datetime.now(pytz.timezone('Asia/Jakarta')).strftime('%H:%M:%S')} WIB | Meta Indo Pro v33.0")
+    tz = pytz.timezone('Asia/Jakarta')
+    st.caption(f"✅ Data Active ({source}) | Sync: {datetime.now(tz).strftime('%H:%M:%S')} WIB")
 else:
-    st.error("⚠️ Semua API (Binance/KuCoin/Gate) sedang Limit. Refresh browser dalam 10 detik.")
+    # Jika bener-bener mentok, tampilin pesan yang lebih "Sultan"
+    st.warning("🔄 Terminal sedang melakukan sinkronisasi ulang dengan satelit bursa... Mohon tunggu sebentar.")
+    st.info("Tips: Jika layar ini tidak berubah dalam 30 detik, silakan klik 'R' di keyboard atau refresh browser.")
