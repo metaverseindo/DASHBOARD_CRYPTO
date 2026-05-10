@@ -53,12 +53,12 @@ def fetch_crypto_data(ex_name):
         st.error(f"API Error: {e}")
         return []
 
-# --- 5. HEADER (FIXED: st.columns(2)) ---
-header_cols = st.columns(2) 
-with header_cols:
+# --- 5. HEADER (FIXED: Menggunakan Indexing dan) ---
+header_cols = st.columns() 
+with header_cols: # <-- Pake index 0 buat kolom pertama
     st.title("📈 CRYPTO NEON")
-    st.caption(f"Source: {exchange_choice} | Build: 3.14.0-Stable")
-with header_cols:
+    st.caption(f"Source: {exchange_choice} | Stable 3.14")
+with header_cols: # <-- Pake index 1 buat kolom kedua
     if st.button("🔄 Force Refresh"):
         st.rerun()
 
@@ -70,25 +70,25 @@ if len(data) > 0:
     df = pd.DataFrame(data)
     df = df.sort_values("Volume", ascending=False).reset_index(drop=True)
 
-    # --- TOP METRICS (FIXED: st.columns(3)) ---
+    # --- TOP METRICS ---
     m_cols = st.columns(3)
     tickers_to_show = ["BTC", "ETH", "SOL"]
     for i, sym in enumerate(tickers_to_show):
         row = df[df['Koin'] == sym]
         if not row.empty:
-            m_cols[i].metric(
-                label=f"{sym}/USDT", 
-                value=f"${row.iloc['Harga']:,.2f}", 
-                delta=f"{row.iloc['Change']:+.2f}%"
-            )
+            with m_cols[i]: # <-- Pake index i
+                st.metric(
+                    label=f"{sym}/USDT", 
+                    value=f"${row.iloc['Harga']:,.2f}", 
+                    delta=f"{row.iloc['Change']:+.2f}%"
+                )
 
     st.markdown("---")
 
-    # --- TABLE & CHART (FIXED: Baris 87/88 - st.columns()) ---
-    # Di sini letak masalahnya. Gue pake cara indexing biar lebih aman.
+    # --- TABLE & CHART ---
     main_layout_cols = st.columns()
     
-    with main_layout_cols:
+    with main_layout_cols: # <-- Kolom Kiri (Tabel)
         st.subheader("📊 Market Overview")
         search = st.text_input("🔍 Search Coin...", "").upper()
         df_display = df[df['Koin'].str.contains(search)] if search else df.head(50)
@@ -107,7 +107,7 @@ if len(data) > 0:
             hide_index=True
         )
 
-    with main_layout_cols:
+    with main_layout_cols: # <-- Kolom Kanan (Chart)
         st.subheader("🔥 Top 10 Vol")
         top_10 = df.head(10)
         fig = go.Figure(go.Bar(
@@ -129,7 +129,7 @@ if len(data) > 0:
     st.caption(f"Last sync: {datetime.now().strftime('%H:%M:%S')}")
 
 else:
-    st.warning("⚠️ Data gagal ditarik. Ganti exchange atau coba lagi.")
+    st.warning("⚠️ Data gagal ditarik.")
 
 # --- 7. AUTO REFRESH ---
 if auto_refresh:
