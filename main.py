@@ -17,9 +17,7 @@ import ccxt
 def fetch_all_usdt_tickers():
     try:
         # Kita pakai library CCXT biar lebih stabil tembus ke Binance
-        exchange = ccxt.binance({
-            'enableRateLimit': True,
-        })
+exchange = ccxt.kucoin({'enableRateLimit': True})
         tickers = exchange.fetch_tickers()
         
         # Filter hanya yang berakhiran USDT
