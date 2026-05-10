@@ -9,7 +9,7 @@ from streamlit_autorefresh import st_autorefresh
 st.set_page_config(page_title="META INDO PRO", layout="wide", initial_sidebar_state="collapsed")
 st_autorefresh(interval=15000, key="datarefresh")
 
-# 2. CSS TERMINAL (ULTRA CLEAN)
+# 2. CSS TERMINAL (ULTRA DARK)
 st.markdown("""
     <style>
     header, footer, #MainMenu {visibility: hidden;}
@@ -28,12 +28,12 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# 3. DATA ENGINE (VERSION 8 - THE TANK)
+# 3. DATA ENGINE (VERSION 9 - MOST STABLE)
 @st.cache_data(ttl=12)
 def fetch_pro_data():
     try:
         # Gunakan KuCoin dengan timeout 15 detik
-        ex = ccxt.kucoin({'timeout': 15000, 'enableRateLimit': True})
+        ex = ccxt.kucoin({'timeout': 15000})
         tickers = ex.fetch_tickers()
         data_rows = []
         
@@ -41,12 +41,12 @@ def fetch_pro_data():
             if '/USDT' in sym and v['last'] is not None and v['quoteVolume'] > 0:
                 coin_symbol = sym.split('/')
                 
-                # Setup Sparkline (Trend) - 7 titik data murni float
+                # Setup Sparkline (7 titik data)
                 p = float(v['last'])
                 c = float(v['percentage'] or 0.0)
                 sparkline = [p * (1 + (c / 100) * (i / 6)) for i in range(7)]
                 
-                # Menggunakan CDN Coinicons yang lebih stabil
+                # Menggunakan CDN logo yang paling ringan & jarang diblokir
                 logo_url = f"https://coinicons-api.vercel.app/api/icon/{coin_symbol.lower()}"
                 
                 data_rows.append({
@@ -59,12 +59,11 @@ def fetch_pro_data():
                     "TREND": sparkline
                 })
         
-        # Sort by Volume terbesar
+        # Sort & Filter Top 50
         df = pd.DataFrame(data_rows).sort_values("VOLUME", ascending=False).head(50)
         df["RANK"] = range(1, len(df) + 1)
         return df
-    except Exception as e:
-        # Jika error, kirim dataframe kosong
+    except:
         return pd.DataFrame()
 
 # 4. HEADER UI
@@ -90,10 +89,10 @@ if not df.empty:
             "RANK": st.column_config.NumberColumn("RANK", width=40),
             "ICON": st.column_config.ImageColumn(" ", width=40),
             "SYMBOL": st.column_config.TextColumn("SYMBOL", width=90),
-            "PRICE": st.column_config.NumberColumn("PRICE ($)", format="$%.4f", width=120),
+            "PRICE": st.column_config.NumberColumn("PRICE ($)", format="$%.4f", width=130),
             "CHANGE": st.column_config.NumberColumn("24H %", format="%+.2f%%", width=100),
             "VOLUME": st.column_config.NumberColumn("VOLUME 24H", format="$%,.0f", width=180),
-            "TREND": st.column_config.LineChartColumn("MARKET TREND", width=150)
+            "TREND": st.column_config.LineChartColumn("MARKET TREND", width=160)
         },
         use_container_width=True,
         hide_index=True,
@@ -102,6 +101,6 @@ if not df.empty:
 
     # 6. FOOTER
     tz_jkt = pytz.timezone('Asia/Jakarta')
-    st.caption(f"Sync: {datetime.now(tz_jkt).strftime('%H:%M:%S')} WIB | Source: KuCoin Global | Refresh: 15s")
+    st.caption(f"Sync: {datetime.now(tz_jkt).strftime('%H:%M:%S')} WIB | Auto-refresh: 15s")
 else:
-    st.warning("🔄 Sedang narik data dari server... Silakan refresh browser kalau lebih dari 10 detik.")
+    st.warning("🔄 Sedang narik data... Kalau tetep blank, coba refresh browser lu sekali lagi.")
