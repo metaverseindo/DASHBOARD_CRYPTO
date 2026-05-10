@@ -5,110 +5,96 @@ from datetime import datetime
 import pytz
 from streamlit_autorefresh import st_autorefresh
 
-# 1. CONFIG & REFRESH (15 detik biar stabil)
+# 1. CONFIG & REFRESH
 st.set_page_config(page_title="META INDO PRO", layout="wide", initial_sidebar_state="collapsed")
 st_autorefresh(interval=15000, key="datarefresh")
 
-# 2. CSS SULTAN (TERMINAL STYLE)
+# 2. CSS CUSTOM (FIXED LAYOUT)
 st.markdown("""
     <style>
     header, footer, #MainMenu {visibility: hidden;}
     .stApp { background-color: #030712; }
-    
-    /* Bikin angka sejajar & font rapi */
     [data-testid="stDataFrame"] td { 
         vertical-align: middle !important; 
-        font-family: 'ui-monospace', 'Cascadia Code', monospace !important;
+        font-family: 'ui-monospace', monospace !important;
     }
-    
-    /* Animasi Glow Header */
     .glow-header {
         color: #10b981;
         text-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
         font-weight: 900;
     }
-    
-    .stAlert { background-color: #111827; border: 1px solid #1f2937; color: #10b981; }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. PRO DATA ENGINE
-@st.cache_data(ttl=14)
-def get_meta_pro_data():
+# 3. DATA ENGINE (WITH ERROR HANDLING)
+@st.cache_data(ttl=10)
+def get_meta_data():
     try:
-        ex = ccxt.kucoin()
+        # Pake exchange yang paling stabil
+        ex = ccxt.kucoin({'timeout': 10000})
         tickers = ex.fetch_tickers()
         rows = []
+        
         for symbol, v in tickers.items():
-            if '/USDT' in symbol:
+            if '/USDT' in symbol and v['last'] is not None:
                 coin = symbol.split('/')
-                # Filter koin-koin sampah, ambil yang volumenya masuk akal aja
-                if v['quoteVolume'] > 0:
+                # Filter koin dengan volume yang valid
+                if v['quoteVolume'] and v['quoteVolume'] > 0:
                     rows.append({
+                        "No": 0, # Placeholder
+                        "Icon": f"https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/{coin.lower()}.png",
                         "Koin": coin,
-                        "Logo": f"https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/{coin.lower()}.png",
-                        "Harga": v['last'],
-                        "Change": v['percentage'] or 0.0,
-                        "Vol": v['quoteVolume'],
-                        # Simulasi trend 24 jam (pake data dummy yang proporsional dengan harga)
-                        "Trend": [v['last'] * (1 + (v['percentage'] or 0)/200 * i) for i in range(-5, 6)]
+                        "Harga": float(v['last']),
+                        "Change": float(v['percentage'] or 0.0),
+                        "Vol": float(v['quoteVolume']),
+                        "Trend": [float(v['last']) * (1 + (i/100)) for i in range(-5, 5)] # Sparkline data
                     })
         
         df = pd.DataFrame(rows).sort_values("Vol", ascending=False).head(50)
-        df.insert(0, "No", range(1, len(df) + 1))
+        df["No"] = range(1, len(df) + 1)
         return df
-    except: return pd.DataFrame()
+    except Exception as e:
+        st.sidebar.error(f"Error: {e}")
+        return pd.DataFrame()
 
-# 4. HEADER LAYOUT
+# 4. HEADER
 st.markdown("""
-    <div style="display: flex; justify-content: space-between; align-items: center; padding: 25px; background: #0f172a; border-radius: 20px; border: 1px solid #1e293b; margin-bottom: 20px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px; background: #0f172a; border-radius: 15px; border: 1px solid #1e293b; margin-bottom: 20px;">
         <div>
-            <h1 class="glow-header" style="font-size: 38px; margin: 0;">📊 META INDO <span style="color:white">PRO</span></h1>
-            <p style="color: #64748b; margin: 0; font-size: 13px; font-family: monospace; letter-spacing: 2px;">REAL-TIME MARKET INTELLIGENCE</p>
+            <h1 class="glow-header" style="font-size: 30px; margin: 0;">📊 META INDO <span style="color:white">PRO</span></h1>
+            <p style="color: #64748b; margin: 0; font-size: 11px; font-family: monospace;">REAL-TIME TERMINAL</p>
         </div>
-        <div style="text-align: right;">
-            <div style="color: #10b981; font-weight: bold; font-family: monospace; display: flex; align-items: center; gap: 8px;">
-                <span style="height: 10px; width: 10px; background-color: #10b981; border-radius: 50%; display: inline-block; box-shadow: 0 0 10px #10b981;"></span>
-                LIVE SERVER
-            </div>
-            <div style="color: #475569; font-size: 11px; margin-top: 5px;">SOURCE: KUCOIN GLOBAL</div>
+        <div style="text-align: right; color: #10b981; font-weight: bold; font-family: monospace; font-size: 12px;">
+            ● LIVE FEED
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-df = get_meta_pro_data()
+df = get_meta_data()
 
 if not df.empty:
-    # 5. ULTIMATE DATAFRAME CONFIG
+    # 5. ULTIMATE DATAFRAME RENDERER
+    # Kita pisahkan antara data display dan data styling agar tidak berat
     st.dataframe(
         df,
         column_config={
             "No": st.column_config.NumberColumn("RANK", width=40),
-            "Logo": st.column_config.ImageColumn("ICON", width=50),
-            "Koin": st.column_config.TextColumn("SYMBOL", width=90),
-            "Harga": st.column_config.NumberColumn("PRICE ($)", format="$%.4f", width=140),
-            "Change": st.column_config.NumberColumn("24H %", format="%.2f%%", width=100),
-            "Vol": st.column_config.NumberColumn("24H VOLUME", format="$%d", width=180),
-            "Trend": st.column_config.LineChartColumn(
-                "TREND (24H)", 
-                width=180,
-                y_min=df["Harga"].min(),
-                y_max=df["Harga"].max()
-            )
+            "Icon": st.column_config.ImageColumn(" ", width=40),
+            "Koin": st.column_config.TextColumn("SYMBOL", width=80),
+            "Harga": st.column_config.NumberColumn("PRICE ($)", format="$%.4f", width=120),
+            "Change": st.column_config.NumberColumn("24H %", format="%+.2f%%", width=100),
+            "Vol": st.column_config.NumberColumn("VOLUME", format="$%,.0f", width=160),
+            "Trend": st.column_config.LineChartColumn("TREND", width=150)
         },
         use_container_width=True,
         hide_index=True,
-        height=750
+        height=650
     )
 
-    # 6. FOOTER
+    # 6. FOOTER WIB
     tz = pytz.timezone('Asia/Jakarta')
-    st.markdown(f"""
-        <div style="display: flex; justify-content: space-between; padding: 10px; color: #475569; font-size: 12px; font-family: monospace;">
-            <span>SINKRONISASI: {datetime.now(tz).strftime('%H:%M:%S')} WIB</span>
-            <span>META INDO v2.0.1 - PRO LICENSE</span>
-        </div>
-    """, unsafe_allow_html=True)
-
+    st.markdown(f"""<p style="color: #475569; font-size: 11px; font-family: monospace;">
+        LAST SYNC: {datetime.now(tz).strftime('%H:%M:%S')} WIB | AUTO-REFRESH ACTIVE</p>""", 
+        unsafe_allow_html=True)
 else:
-    st.info("🔄 Sedang memuat data dan logo koin... Mohon tunggu.")
+    st.info("🔄 Sedang menyambungkan ke API KuCoin... Silakan refresh halaman jika lama.")
