@@ -11,7 +11,7 @@ st.set_page_config(
     layout="wide",
 )
 
-# --- 2. CUSTOM CSS (STYLE NEON) ---
+# --- 2. CUSTOM CSS ---
 st.markdown("""
     <style>
     .stApp { background-color: #0e1117; }
@@ -29,7 +29,7 @@ with st.sidebar:
     exchange_choice = st.selectbox("Pilih Exchange:", ["KuCoin", "Binance"])
     auto_refresh = st.toggle("Auto-refresh (30s)", value=True)
     st.markdown("---")
-    st.info("Tips: Gunakan KuCoin jika Binance sedang memblokir IP server.")
+    st.info("Gunakan KuCoin jika Binance sedang memblokir IP server.")
 
 # --- 4. FUNGSI AMBIL DATA ---
 def fetch_crypto_data(ex_name):
@@ -50,20 +50,19 @@ def fetch_crypto_data(ex_name):
                 })
         return rows
     except Exception as e:
-        st.error(f"Error fetching data: {e}")
+        st.error(f"Error: {e}")
         return []
 
-# --- 5. HEADER ---
-# DI SINI UDAH GUE KASIH ANGKA DI DALAM KURUNG
+# --- 5. HEADER (FIXED: WAJIB ADA ISI DI DALAM KURUNG) ---
 col_h1, col_h2 = st.columns() 
 with col_h1:
     st.title("📈 CRYPTO NEON")
-    st.caption(f"Source: {exchange_choice} API")
+    st.caption(f"Source: {exchange_choice} API | Python 3.14 Version")
 with col_h2:
     if st.button("🔄 Force Refresh"):
         st.rerun()
 
-# --- 6. MAIN CONTENT ---
+# --- 6. MAIN ENGINE ---
 with st.spinner("🚀 Syncing with Blockchain..."):
     data = fetch_crypto_data(exchange_choice)
 
@@ -71,8 +70,7 @@ if len(data) > 0:
     df = pd.DataFrame(data)
     df = df.sort_values("Volume", ascending=False).reset_index(drop=True)
 
-    # --- TOP METRICS ---
-    # DI SINI JUGA UDAH GUE KASIH ANGKA 3
+    # --- TOP METRICS (FIXED: WAJIB ADA ISI DI DALAM KURUNG) ---
     m_cols = st.columns(3)
     for i, sym in enumerate(["BTC", "ETH", "SOL"]):
         row = df[df['Koin'] == sym]
@@ -81,8 +79,7 @@ if len(data) > 0:
 
     st.markdown("---")
 
-    # --- TABLE & CHART ---
-    # DI SINI JUGA UDAH GUE KASIH RASIO. INI YANG BIKIN ERROR BARIS 86 LU!
+    # --- TABLE & CHART (FIXED: WAJIB ADA ISI DI DALAM KURUNG) ---
     col_table, col_chart = st.columns()
     
     with col_table:
@@ -108,7 +105,7 @@ if len(data) > 0:
     st.caption(f"Last sync: {datetime.now().strftime('%H:%M:%S')}")
 
 else:
-    st.warning("⚠️ Gagal mengambil data. Coba ganti Exchange di Sidebar.")
+    st.warning("⚠️ Gagal tarik data. Coba ganti Exchange di sidebar.")
 
 # --- 7. AUTO REFRESH ---
 if auto_refresh:
