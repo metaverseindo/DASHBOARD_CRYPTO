@@ -14,7 +14,7 @@ st.caption("Semua pasangan USDT dari Binance API")
 
 def fetch_all_usdt_tickers():
     try:
-        url = "https://api.binance.com/api/v3/ticker/24hr"
+        url = "https://api3.binance.com/api/v3/ticker/24hr"
         resp = requests.get(url, timeout=10)
         resp.raise_for_status()
         all_tickers = resp.json()
