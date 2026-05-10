@@ -51,7 +51,7 @@ def fetch_data_safe():
     return pd.DataFrame(backup), "🔴 SERVERS BUSY (SHOWING STANDBY DATA)"
 
 # 4. RENDER
-st.markdown('<h1 class="glow-header">📊 META INDO PRO TERMINAL</h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="glow-header">📊 CEK API DASHBOARD</h1>', unsafe_allow_html=True)
 
 # Indikator Key
 if "BINANCE_API_KEY" in st.secrets:
