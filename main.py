@@ -54,8 +54,8 @@ def fetch_crypto_data(ex_name):
         return []
 
 # --- 5. HEADER ---
-# FIXED: Menambahkan angka 2 di dalam kurung
-col_h1, col_h2 = st.columns(2) 
+# DI SINI UDAH GUE KASIH ANGKA DI DALAM KURUNG
+col_h1, col_h2 = st.columns() 
 with col_h1:
     st.title("📈 CRYPTO NEON")
     st.caption(f"Source: {exchange_choice} API")
@@ -72,7 +72,7 @@ if len(data) > 0:
     df = df.sort_values("Volume", ascending=False).reset_index(drop=True)
 
     # --- TOP METRICS ---
-    # FIXED: Menambahkan angka 3 di dalam kurung
+    # DI SINI JUGA UDAH GUE KASIH ANGKA 3
     m_cols = st.columns(3)
     for i, sym in enumerate(["BTC", "ETH", "SOL"]):
         row = df[df['Koin'] == sym]
@@ -82,7 +82,7 @@ if len(data) > 0:
     st.markdown("---")
 
     # --- TABLE & CHART ---
-    # FIXED: Baris 83 yang bermasalah sekarang diisi
+    # DI SINI JUGA UDAH GUE KASIH RASIO. INI YANG BIKIN ERROR BARIS 86 LU!
     col_table, col_chart = st.columns()
     
     with col_table:
