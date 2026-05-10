@@ -75,26 +75,29 @@ if data:
 
     st.divider()
 
-   # 7. TABLE DENGAN FORMAT RIBUAN (KOMMA/DOT)
+  # 7. TABLE DENGAN SINYAL WARNA & PEMISAH RIBUAN
     st.markdown("<h2 class='text-xl font-bold text-slate-200 mb-4 px-2'>📊 Market Movement</h2>", unsafe_allow_html=True)
     
     st.data_editor(
         df.head(50),
         column_config={
-            # Format: $1,234.56 (Standar internasional yang umum di Crypto)
+            # Harga tetap dengan 4 desimal
             "Harga": st.column_config.NumberColumn(
                 "Harga ($)", 
                 format="$%.4f"
             ),
-            # Format: 1,000,000 (Ada pemisah ribuan biar gak pusing)
+            # Volume sekarang pake pemisah ribuan (1,234,567)
             "Vol": st.column_config.NumberColumn(
                 "Volume 24h", 
-                format="%d" # Menggunakan format integer dengan pemisah ribuan otomatis
+                format="%d" 
             ),
-            # Format: +2.50%
-            "Change": st.column_config.NumberColumn(
+            # SINYAL WARNA: Ijo buat naik, Merah buat turun
+            "Change": st.column_config.ProgressColumn(
                 "Change (%)",
-                format="%.2f%%"
+                help="Persentase perubahan harga 24 jam",
+                format="%.2f%%",
+                min_value=-15, # Batas bawah warna merah
+                max_value=15,  # Batas atas warna ijo
             )
         },
         use_container_width=True,
@@ -102,7 +105,16 @@ if data:
         hide_index=True,
         disabled=True
     )
-    # --- BAGIAN FIX JAM WIB ---
+    
+    # Tambahan CSS biar warna Change makin kontras (opsional tapi bagus)
+    st.markdown("""
+        <style>
+        /* Mewarnai text di kolom Change berdasarkan value */
+        [data-testid="stTableSummary"] { font-family: monospace; }
+        </style>
+    """, unsafe_allow_html=True)
+
+    # --- INFO JAM WIB ---
     tz_jakarta = pytz.timezone('Asia/Jakarta')
     waktu_sekarang = datetime.now(tz_jakarta).strftime('%H:%M:%S')
-    st.caption(f"Last sync: {waktu_sekarang} WIB (Waktu Indonesia Barat)")
+    st.caption(f"Last sync: {waktu_sekarang} WIB")
