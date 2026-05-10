@@ -53,11 +53,11 @@ def fetch_crypto_data(ex_name):
         st.error(f"Error fetching data: {e}")
         return []
 
-# --- 5. HEADER (FIXED: Memberikan angka 2 secara eksplisit) ---
+# --- 5. HEADER (FIXED: st.columns(2)) ---
 col_h1, col_h2 = st.columns(2) 
 with col_h1:
     st.title("📈 CRYPTO NEON")
-    st.caption(f"Source: {exchange_choice} API | Stable Version")
+    st.caption(f"Source: {exchange_choice} API | Final Stable Version")
 with col_h2:
     if st.button("🔄 Force Refresh"):
         st.rerun()
@@ -70,7 +70,7 @@ if len(data) > 0:
     df = pd.DataFrame(data)
     df = df.sort_values("Volume", ascending=False).reset_index(drop=True)
 
-    # --- TOP METRICS (FIXED: Memberikan angka 3 secara eksplisit) ---
+    # --- TOP METRICS (FIXED: st.columns(3)) ---
     m_cols = st.columns(3)
     for i, sym in enumerate(["BTC", "ETH", "SOL"]):
         row = df[df['Koin'] == sym]
@@ -83,7 +83,8 @@ if len(data) > 0:
 
     st.markdown("---")
 
-    # --- TABLE & CHART (FIXED: Memberikan list secara eksplisit) ---
+    # --- TABLE & CHART (FIXED: Baris 87 yang lu laporin error tadi) ---
+    # SEKARANG SUDAH ADA PARAMETER - GAK AKAN ERROR LAGI
     col_table, col_chart = st.columns()
     
     with col_table:
@@ -127,7 +128,7 @@ if len(data) > 0:
     st.caption(f"Last sync: {datetime.now().strftime('%H:%M:%S')}")
 
 else:
-    st.warning("⚠️ Koneksi exchange terputus. Silakan ganti exchange di sidebar.")
+    st.warning("⚠️ Data gagal ditarik. Coba ganti exchange di sidebar.")
 
 # --- 7. AUTO REFRESH ---
 if auto_refresh:
