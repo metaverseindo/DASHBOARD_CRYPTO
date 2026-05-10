@@ -5,11 +5,11 @@ from datetime import datetime
 import pytz
 from streamlit_autorefresh import st_autorefresh
 
-# 1. PAGE SETUP
+# 1. PAGE CONFIG
 st.set_page_config(page_title="META INDO PRO", layout="wide", initial_sidebar_state="collapsed")
 st_autorefresh(interval=15000, key="datarefresh")
 
-# 2. CSS TERMINAL (DARK MODE LUXURY)
+# 2. CSS TERMINAL (LEBIH TAJAM)
 st.markdown("""
     <style>
     header, footer, #MainMenu {visibility: hidden;}
@@ -19,44 +19,45 @@ st.markdown("""
         text-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
         font-weight: 900;
     }
-    /* Memastikan tabel rapi & angka monospace agar titik sejajar */
+    /* Memastikan tabel rapi, teks putih, dan angka rata kanan */
     [data-testid="stDataFrame"] td { 
         vertical-align: middle !important; 
-        font-family: 'ui-monospace', monospace !important; 
+        font-family: 'ui-monospace', monospace !important;
+        color: #e2e8f0 !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. DATA ENGINE (ROBUST & FAST)
-@st.cache_data(ttl=12)
-def fetch_market_data():
+# 3. DATA ENGINE (VERSION 7 - ULTRA STABLE)
+@st.cache_data(ttl=10)
+def fetch_pro_data():
     try:
-        # Pake KuCoin dengan timeout 15 detik
-        ex = ccxt.kucoin({'timeout': 15000})
+        # Gunakan KuCoin API
+        ex = ccxt.kucoin({'timeout': 20000})
         tickers = ex.fetch_tickers()
-        data_list = []
+        data_rows = []
         
         for sym, v in tickers.items():
             if '/USDT' in sym and v['last'] is not None and v['quoteVolume'] > 0:
-                coin = sym.split('/')
+                coin_symbol = sym.split('/')
                 
-                # Setup Sparkline (Trend) - 7 titik data biar enteng
+                # Buat data Trend sederhana (7 titik data) - Pastikan murni float
                 p = float(v['last'])
                 c = float(v['percentage'] or 0.0)
                 sparkline = [p * (1 + (c / 100) * (i / 6)) for i in range(7)]
                 
-                data_list.append({
+                data_rows.append({
                     "RANK": 0,
-                    "ICON": f"https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/32/color/{coin.lower()}.png",
-                    "COIN": coin,
+                    "ICON": f"https://cryptoicons.org/api/color/{coin_symbol.lower()}/32",
+                    "COIN": coin_symbol,
                     "PRICE": p,
-                    "24H %": c,
+                    "CHANGE": c,
                     "VOLUME": float(v['quoteVolume']),
                     "TREND": sparkline
                 })
         
-        # Sort by Volume terbesar
-        df = pd.DataFrame(data_list).sort_values("VOLUME", ascending=False).head(50)
+        # Sort & Filter Top 50
+        df = pd.DataFrame(data_rows).sort_values("VOLUME", ascending=False).head(50)
         df["RANK"] = range(1, len(df) + 1)
         return df
     except:
@@ -66,28 +67,28 @@ def fetch_market_data():
 st.markdown("""
     <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px; background: #0f172a; border-radius: 15px; border: 1px solid #1e293b; margin-bottom: 20px;">
         <div>
-            <h1 class="glow-text" style="font-size: 30px; margin: 0;">📊 META INDO PRO</h1>
-            <p style="color: #64748b; margin: 0; font-size: 11px; font-family: monospace;">REAL-TIME MARKET ANALYSIS</p>
+            <h1 class="glow-text" style="font-size: 32px; margin: 0;">📊 META INDO PRO</h1>
+            <p style="color: #64748b; margin: 0; font-size: 11px; font-family: monospace; letter-spacing: 2px;">BLOCKCHAIN MARKET TERMINAL</p>
         </div>
-        <div style="text-align: right; color: #10b981; font-weight: bold; font-family: monospace; font-size: 12px;">
-            ● TERMINAL ONLINE
+        <div style="text-align: right; color: #10b981; font-weight: bold; font-family: monospace;">
+            ● LIVE CONNECTION
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-df = fetch_market_data()
+df = fetch_pro_data()
 
 if not df.empty:
-    # 5. RENDER TABEL (Pake Column Config Biar Rapi)
+    # 5. RENDER TABEL (KUNCI LEBAR & FORMAT)
     st.dataframe(
         df,
         column_config={
-            "RANK": st.column_config.NumberColumn("RANK", width=40),
-            "ICON": st.column_config.ImageColumn(" ", width=40),
-            "COIN": st.column_config.TextColumn("SYMBOL", width=80),
-            "PRICE": st.column_config.NumberColumn("PRICE ($)", format="$%.4f", width=120),
-            "24H %": st.column_config.NumberColumn("CHANGE", format="%+.2f%%", width=100),
-            "VOLUME": st.column_config.NumberColumn("24H VOL", format="$%,.0f", width=160),
+            "RANK": st.column_config.NumberColumn("RANK", width=45),
+            "ICON": st.column_config.ImageColumn(" ", width=45),
+            "COIN": st.column_config.TextColumn("SYMBOL", width=90),
+            "PRICE": st.column_config.NumberColumn("PRICE (USDT)", format="$%.4f", width=130),
+            "CHANGE": st.column_config.NumberColumn("24H %", format="%+.2f%%", width=100),
+            "VOLUME": st.column_config.NumberColumn("24H VOLUME", format="$%,.0f", width=180),
             "TREND": st.column_config.LineChartColumn("MARKET TREND", width=160)
         },
         use_container_width=True,
@@ -96,7 +97,7 @@ if not df.empty:
     )
 
     # 6. FOOTER
-    tz = pytz.timezone('Asia/Jakarta')
-    st.caption(f"Last Updated: {datetime.now(tz).strftime('%H:%M:%S')} WIB | Auto-refresh active")
+    tz_jkt = pytz.timezone('Asia/Jakarta')
+    st.caption(f"Sync: {datetime.now(tz_jkt).strftime('%H:%M:%S')} WIB | Source: KuCoin Global | Auto-refresh 15s")
 else:
-    st.info("🔄 Connecting to market data... Silakan refresh halaman jika data tidak muncul.")
+    st.info("🔄 Connecting to API... Jika blank, silakan refresh browser lu.")
