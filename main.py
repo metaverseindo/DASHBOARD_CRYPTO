@@ -29,7 +29,7 @@ with st.sidebar:
     exchange_choice = st.selectbox("Pilih Exchange:", ["KuCoin", "Binance"])
     auto_refresh = st.toggle("Auto-refresh (30s)", value=True)
     st.markdown("---")
-    st.info("Gunakan KuCoin jika Binance sedang memblokir IP server.")
+    st.info("Tips: Gunakan KuCoin jika Binance sedang memblokir IP server.")
 
 # --- 4. FUNGSI AMBIL DATA ---
 def fetch_crypto_data(ex_name):
@@ -50,14 +50,14 @@ def fetch_crypto_data(ex_name):
                 })
         return rows
     except Exception as e:
-        st.error(f"Error: {e}")
+        st.error(f"Error fetching data: {e}")
         return []
 
-# --- 5. HEADER (FIXED: WAJIB ADA ISI DI DALAM KURUNG) ---
-col_h1, col_h2 = st.columns() 
+# --- 5. HEADER (FIXED: Memberikan angka 2 secara eksplisit) ---
+col_h1, col_h2 = st.columns(2) 
 with col_h1:
     st.title("📈 CRYPTO NEON")
-    st.caption(f"Source: {exchange_choice} API | Python 3.14 Version")
+    st.caption(f"Source: {exchange_choice} API | Stable Version")
 with col_h2:
     if st.button("🔄 Force Refresh"):
         st.rerun()
@@ -70,16 +70,20 @@ if len(data) > 0:
     df = pd.DataFrame(data)
     df = df.sort_values("Volume", ascending=False).reset_index(drop=True)
 
-    # --- TOP METRICS (FIXED: WAJIB ADA ISI DI DALAM KURUNG) ---
+    # --- TOP METRICS (FIXED: Memberikan angka 3 secara eksplisit) ---
     m_cols = st.columns(3)
     for i, sym in enumerate(["BTC", "ETH", "SOL"]):
         row = df[df['Koin'] == sym]
         if not row.empty:
-            m_cols[i].metric(label=f"{sym}/USDT", value=f"${row.iloc['Harga']:,.2f}", delta=f"{row.iloc['Change']:+.2f}%")
+            m_cols[i].metric(
+                label=f"{sym}/USDT", 
+                value=f"${row.iloc['Harga']:,.2f}", 
+                delta=f"{row.iloc['Change']:+.2f}%"
+            )
 
     st.markdown("---")
 
-    # --- TABLE & CHART (FIXED: WAJIB ADA ISI DI DALAM KURUNG) ---
+    # --- TABLE & CHART (FIXED: Memberikan list secara eksplisit) ---
     col_table, col_chart = st.columns()
     
     with col_table:
@@ -91,21 +95,39 @@ if len(data) > 0:
             return f"color: {'#deff9a' if val >= 0 else '#ff4b4b'}; font-weight: bold"
 
         st.dataframe(
-            df_display.style.format({"Harga": "${:,.4f}", "Change": "{:+.2f}%", "Volume": "${:,.0f}"}).map(color_change, subset=["Change"]),
-            use_container_width=True, height=450, hide_index=True
+            df_display.style.format({
+                "Harga": "${:,.4f}", 
+                "Change": "{:+.2f}%", 
+                "Volume": "${:,.0f}"
+            }).map(color_change, subset=["Change"]),
+            use_container_width=True, 
+            height=450, 
+            hide_index=True
         )
 
     with col_chart:
         st.subheader("🔥 Top 10 Vol")
         top_10 = df.head(10)
-        fig = go.Figure(go.Bar(x=top_10['Volume'], y=top_10['Koin'], orientation='h', marker=dict(color='#deff9a')))
-        fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white', height=450, margin=dict(l=0, r=0, t=20, b=0), yaxis=dict(autorange="reversed"))
+        fig = go.Figure(go.Bar(
+            x=top_10['Volume'], 
+            y=top_10['Koin'], 
+            orientation='h', 
+            marker=dict(color='#deff9a')
+        ))
+        fig.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)', 
+            plot_bgcolor='rgba(0,0,0,0)', 
+            font_color='white', 
+            height=450, 
+            margin=dict(l=0, r=0, t=20, b=0), 
+            yaxis=dict(autorange="reversed")
+        )
         st.plotly_chart(fig, use_container_width=True)
 
     st.caption(f"Last sync: {datetime.now().strftime('%H:%M:%S')}")
 
 else:
-    st.warning("⚠️ Gagal tarik data. Coba ganti Exchange di sidebar.")
+    st.warning("⚠️ Koneksi exchange terputus. Silakan ganti exchange di sidebar.")
 
 # --- 7. AUTO REFRESH ---
 if auto_refresh:
