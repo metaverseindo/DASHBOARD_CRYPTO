@@ -2,6 +2,30 @@ import streamlit as st
 import pandas as pd
 import ccxt
 
+st.markdown("""
+    <style>
+    /* Paksa semua elemen scroll jadi halus */
+    html {
+        scroll-behavior: smooth;
+    }
+    
+    /* Custom scrollbar ala Neon (Biar makin sinkron sama tampilan koin) */
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #0b0e11;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #00ffc8;
+        border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #00b38c;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
 # 1. KONFIGURASI (Cukup satu kali di paling atas)
 st.set_page_config(
     page_title="Crypto Dashboard",
