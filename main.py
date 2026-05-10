@@ -4,7 +4,7 @@ import ccxt
 from datetime import datetime
 
 # 1. CONFIG (Harus paling atas)
-st.set_page_config(page_title="META INDO", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="META INDO DAHSBOARD", layout="wide", initial_sidebar_state="collapsed")
 
 # 2. INJECT TAILWIND & CLEAN UI
 st.markdown("""
