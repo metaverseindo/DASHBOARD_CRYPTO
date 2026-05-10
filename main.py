@@ -3,10 +3,10 @@ import pandas as pd
 import ccxt
 from datetime import datetime
 
-# 1. CONFIG - Harus Paling Atas
+# 1. CONFIG
 st.set_page_config(page_title="META INDO", layout="wide", initial_sidebar_state="collapsed")
 
-# 2. INJECT TAILWIND & CLEAN UI
+# 2. STYLE & TAILWIND
 st.markdown("""
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -15,68 +15,55 @@ st.markdown("""
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-track { background: #020617; }
     ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 5px; }
-    [data-testid="stMetricValue"] { color: #34d399 !important; font-family: 'ui-monospace', monospace; font-weight: 800; }
+    [data-testid="stMetricValue"] { color: #34d399 !important; font-family: 'monospace'; font-weight: 800; }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. FUNGSI DATA
+# 3. DATA ENGINE
 def get_data():
     try:
         ex = ccxt.kucoin({'enableRateLimit': True})
-        tickers = ex.fetch_tickers()
-        rows = []
-        for s, v in tickers.items():
-            if '/USDT' in s:
-                rows.append({
-                    "Koin": s.split('/'),
-                    "Harga": v['last'],
-                    "Vol": v['quoteVolume'],
-                    "Change": v['percentage'] or 0.0
-                })
-        return rows
-    except:
-        return []
+        t = ex.fetch_tickers()
+        return [{"Koin": s.split('/'), "Harga": v['last'], "Vol": v['quoteVolume'], "Change": v['percentage'] or 0.0} 
+                for s, v in t.items() if '/USDT' in s]
+    except: return []
 
-# 4. HEADER META INDO
+# 4. HEADER
 st.markdown("""
     <div class="flex justify-between items-center bg-slate-900/80 p-6 rounded-2xl border border-slate-800 mb-8">
         <div>
             <h1 class="text-4xl font-black text-emerald-400 tracking-tighter">📊 META INDO</h1>
             <p class="text-slate-400 text-sm font-medium uppercase tracking-widest">Crypto Analytics Terminal</p>
         </div>
-        <div class="text-right">
-            <p class="text-slate-500 text-xs font-mono">SYSTEM READY</p>
-            <p class="text-emerald-500 text-xs font-mono">ONLINE</p>
-        </div>
     </div>
     """, unsafe_allow_html=True)
 
-# 5. TOMBOL REFRESH (Pake cara paling aman, gak pake 'with')
-col_btn = st.columns(3) 
-if col_btn.button("🔄 SYNC DATA SEKARANG"):
+# 5. BUTTON REFRESH (Pake cara paling basic biar gak error)
+if st.button("🔄 SYNC DATA SEKARANG"):
     st.cache_data.clear()
     st.rerun()
 
-# 6. ENGINE
+# 6. MAIN ENGINE
 data = get_data()
 
 if data:
     df = pd.DataFrame(data).sort_values("Vol", ascending=False)
     
-    # METRICS (Pake indeks,, biar gak error)
-    m_cols = st.columns(3)
-    coins = ["BTC", "ETH", "SOL"]
+    # METRICS - Langsung buat 3 kolom dan isi satu-satu
+    c1, c2, c3 = st.columns(3)
     
+    coins = ["BTC", "ETH", "SOL"]
     for i, sym in enumerate(coins):
         row = df[df['Koin'] == sym]
         if not row.empty:
-            m_cols[i].metric(
+            target_col = [c1, c2, c3][i]
+            target_col.metric(
                 label=f"{sym} Market", 
                 value=f"${row.iloc['Harga']:,.2f}", 
                 delta=f"{row.iloc['Change']:+.2f}%"
             )
 
-    st.markdown("<div class='my-8 border-b border-slate-800'></div>", unsafe_allow_html=True)
+    st.divider()
 
     # 7. TABLE
     st.markdown("<h2 class='text-xl font-bold text-slate-200 mb-4 px-2'>📊 Market Movement</h2>", unsafe_allow_html=True)
@@ -84,4 +71,4 @@ if data:
     st.caption(f"Last sync: {datetime.now().strftime('%H:%M:%S')} WIB")
 
 else:
-    st.warning("Gagal ambil data. Coba klik Sync Data.")
+    st.warning("Data belum masuk. Klik Sync Data.")
