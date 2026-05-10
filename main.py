@@ -28,7 +28,7 @@ st.markdown(r'''
 </style>
 ''', unsafe_allow_html=True)
 
-# 3. DATA ENGINE (COINGECKO)
+# 3. DATA ENGINE
 @st.cache_data(ttl=30)
 def fetch_market_data():
     try:
@@ -64,7 +64,7 @@ df_final, btc_p, btc_c = fetch_market_data()
 tz = pytz.timezone('Asia/Jakarta')
 time_now = datetime.now(tz).strftime("%H:%M:%S")
 
-# --- HEADER (Fix 2 Columns) ---
+# --- HEADER ---
 h1, h2 = st.columns(2)
 with h1:
     st.markdown('<p class="title-text">METAVERSEINDO_</p>', unsafe_allow_html=True)
@@ -73,7 +73,7 @@ with h2:
 
 st.write("---")
 
-# --- METRICS (Fix 4 Columns) ---
+# --- METRICS ---
 m1, m2, m3, m4 = st.columns(4)
 m1.metric("BTC / USD", f"${btc_p:,.0f}" if btc_p > 0 else "---", f"{btc_c:+.2f}%")
 m2.metric("STATUS", "LIVE", "STABLE")
@@ -87,7 +87,6 @@ l_col, r_col = st.columns([1, 1.8])
 
 with l_col:
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    # FIX BARIS 96: Teks digabung dalam satu baris, tanda kutip ditutup benar
     st.write("### 📊 Market Flow")
     if not df_final.empty:
         def color_change(val):
@@ -101,18 +100,19 @@ with l_col:
 with r_col:
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     st.write("### 📈 Live Chart")
-    tv_v92 = f'''
-    <div id="tv_v92"></div>
+    tv_v93 = f'''
+    <div id="tv_v93"></div>
     <script src="https://s3.tradingview.com/tv.js"></script>
     <script>
     new TradingView.widget({{
       "width": "100%", "height": 450, "symbol": "BINANCE:BTCUSDT",
       "interval": "60", "theme": "dark", "style": "1", "locale": "en",
-      "container_id": "tv_v92", "allow_symbol_change": true
+      "container_id": "tv_v93", "allow_symbol_change": true
     }});
     </script>
     '''
-    components.html(tv_v92, height=460)
+    components.html(tv_v93, height=460)
     st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("<div style='text-align:center;color:#1e293b;font-size:10px;margin-top:20px;'>© 2026 METAVERSEINDO</div>", unsafe_allow_html=True
+# 5. FOOTER (FIXED: Kurung ditutup dengan benar)
+st.markdown("<div style='text-align:center;color:#1e293b;font-size:10px;margin-top:20px;'>© 2026 METAVERSEINDO</div>", unsafe_allow_html=True)
