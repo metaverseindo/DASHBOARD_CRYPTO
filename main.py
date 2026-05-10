@@ -5,10 +5,10 @@ from datetime import datetime
 import pytz
 from streamlit_autorefresh import st_autorefresh
 
-# 1. CONFIG (Harus paling atas)
+# 1. CONFIG
 st.set_page_config(page_title="META INDO", layout="wide", initial_sidebar_state="collapsed")
 
-# 2. AUTO-REFRESH (Set tiap 10 detik biar gak terlalu pusing tapi tetep Live)
+# 2. AUTO-REFRESH (Refresh tiap 10 detik)
 st_autorefresh(interval=10000, key="datarefresh")
 
 # 3. STYLE & UI CUSTOMIZATION
@@ -18,23 +18,17 @@ st.markdown("""
     header, footer, #MainMenu {visibility: hidden;}
     .stApp { background-color: #020617; }
     
-    /* Bikin angka di tabel rata kanan & font monospace biar rapi sejajar */
+    /* Perbaikan: Rata Kanan untuk angka & Monospace agar titik sejajar */
     [data-testid="stDataFrame"] td { 
         text-align: right !important; 
-        font-family: 'ui-monospace', 'Cascadia Code', monospace !important; 
+        font-family: 'ui-monospace', monospace !important; 
     }
     
-    /* Glow effect buat nama Meta Indo */
     .glow-text { text-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
-    
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: #020617; }
-    ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
     </style>
     """, unsafe_allow_html=True)
 
-# 4. DATA ENGINE (Update: Tambah Kolom Nomor)
+# 4. DATA ENGINE (Update: Menambahkan Kolom No)
 @st.cache_data(ttl=9)
 def get_crypto_data():
     try:
@@ -50,107 +44,72 @@ def get_crypto_data():
                     "Change": v['percentage'] or 0.0
                 })
         
-        # Sort & Ambil Top 50
-        df_result = pd.DataFrame(rows).sort_values("Vol", ascending=False).head(50)
+        # Sort by Volume & Ambil Top 50
+        df_res = pd.DataFrame(rows).sort_values("Vol", ascending=False).head(50)
         
-        # TAMBAH NOMOR URUT:
-        df_result.insert(0, "No", range(1, len(df_result) + 1))
+        # INSERT KOLOM NOMOR DI AWAL
+        df_res.insert(0, "No", range(1, len(df_res) + 1))
         
-        return df_result
-    except Exception as e:
+        return df_res
+    except:
         return pd.DataFrame()
-        
-# 5. HEADER META INDO
+
+# 5. HEADER
 st.markdown("""
     <div class="flex justify-between items-center bg-slate-900/80 p-6 rounded-2xl border border-slate-800 mb-6">
         <div>
             <h1 class="text-4xl font-black text-emerald-400 tracking-tighter glow-text">📊 META INDO</h1>
-            <p class="text-slate-400 text-sm font-medium uppercase tracking-widest">Crypto Analytics Terminal</p>
+            <p class="text-slate-400 text-sm font-medium uppercase tracking-widest">Live Market Pulse</p>
         </div>
         <div class="flex items-center gap-3 bg-slate-800/50 px-4 py-2 rounded-full border border-slate-700">
             <span class="relative flex h-3 w-3">
               <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
             </span>
-            <p class="text-emerald-500 font-mono text-xs font-bold">LIVE FEED ACTIVE</p>
+            <p class="text-emerald-500 font-mono text-xs font-bold">LIVE FEED</p>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-# Eksekusi ambil data
 df = get_crypto_data()
 
 if not df.empty:
-    # 6. TOP METRICS (BTC, ETH, SOL)
+    # 6. METRICS (BTC, ETH, SOL)
     m1, m2, m3 = st.columns(3)
-    important_coins = ["BTC", "ETH", "SOL"]
-    cols = [m1, m2, m3]
-    
-    for i, sym in enumerate(important_coins):
+    for i, sym in enumerate(["BTC", "ETH", "SOL"]):
         row = df[df['Koin'] == sym]
         if not row.empty:
-            cols[i].metric(
-                label=f"{sym} / USDT", 
-                value=f"${row.iloc['Harga']:,.2f}", 
-                delta=f"{row.iloc['Change']:+.2f}%"
-            )
+            [m1, m2, m3][i].metric(f"{sym}/USDT", f"${row.iloc['Harga']:,.2f}", f"{row.iloc['Change']:+.2f}%")
 
     st.markdown("<div class='my-6 border-b border-slate-800'></div>", unsafe_allow_html=True)
 
-    # 7. MAIN TABLE (Update: Formatting buat kolom "No")
-if not df.empty:
-    st.markdown("<h2 class='text-xl font-bold text-slate-200 mb-4 px-2'>📊 Market Movement (Top 50 Vol)</h2>", unsafe_allow_html=True)
+    # 7. MAIN TABLE (Update: Style Kolom Nomor)
+    st.markdown("<h2 class='text-xl font-bold text-slate-200 mb-4 px-2'>📊 Market Movement</h2>", unsafe_allow_html=True)
 
     def style_rows(row):
+        # Change Ijo/Merah
         change_color = '#10b981' if row['Change'] >= 0 else '#ef4444'
         styles = []
         for name in row.index:
             if name == 'Change':
                 styles.append(f'color: {change_color}; font-weight: 800;')
             elif name == 'No':
-                styles.append('color: #64748b; text-align: center;') # Warna abu-abu buat nomor
+                styles.append('color: #64748b; text-align: center;') # Nomor abu-abu & tengah
             else:
-                styles.append('color: #cbd5e1;')
+                styles.append('color: #cbd5e1;') # Angka lain abu-abu terang
         return styles
 
     styled_df = df.style.format({
         "No": "{:02d}",     # Format 01, 02, dst
-        "Harga": "${:,.4f}",
-        "Vol": "{:,.0f}",
-        "Change": "{:+.2f}%"
+        "Harga": "${:,.4f}", # Koma ribuan, titik desimal
+        "Vol": "{:,.0f}",    # Koma ribuan, tanpa desimal
+        "Change": "{:+.2f}%" 
     }).apply(style_rows, axis=1)
 
-    st.dataframe(
-        styled_df,
-        use_container_width=True, 
-        height=650, 
-        hide_index=True
-    )
+    st.dataframe(styled_df, use_container_width=True, height=650, hide_index=True)
 
-    # Apply Format Ribuan & Desimal
-    styled_df = df.style.format({
-        "Harga": "${:,.4f}", # Pake koma untuk ribuan, 4 desimal
-        "Vol": "{:,.0f}",    # Pake koma untuk ribuan, tanpa desimal (Volume)
-        "Change": "{:+.2f}%" # Sinyal + atau - dengan persen
-    }).apply(style_rows, axis=1)
-
-    # Tampilkan Tabel
-    st.dataframe(
-        styled_df,
-        use_container_width=True, 
-        height=650, 
-        hide_index=True
-    )
-
-    # 8. FOOTER WIB
-    tz_jkt = pytz.timezone('Asia/Jakarta')
-    waktu_skrg = datetime.now(tz_jkt).strftime('%H:%M:%S')
-    st.markdown(f"""
-        <div class="flex justify-between items-center mt-4 px-2">
-            <p class="text-slate-500 text-xs font-mono">ID: {waktu_skrg} WIB | Update: Auto (10s)</p>
-            <a href="#top" class="text-emerald-500 text-xs no-underline hover:underline">↑ Back to Top</a>
-        </div>
-    """, unsafe_allow_html=True)
-
+    # 8. FOOTER
+    tz = pytz.timezone('Asia/Jakarta')
+    st.markdown(f'<p class="text-slate-500 text-xs font-mono mt-4">ID: {datetime.now(tz).strftime("%H:%M:%S")} WIB | Auto-Refresh: 10s</p>', unsafe_allow_html=True)
 else:
-    st.error("Gagal terhubung ke server exchange. Mencoba kembali...")
+    st.error("API Error. Memperbaiki koneksi...")
