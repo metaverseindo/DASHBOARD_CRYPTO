@@ -6,7 +6,7 @@ from datetime import datetime
 
 # --- 1. CONFIG DASHBOARD ---
 st.set_page_config(
-    page_title="Crypto Neon Dashboard",
+    page_title="Crypto Metaverse Dashboard",
     page_icon="⚡",
     layout="wide",
 )
