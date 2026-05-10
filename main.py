@@ -10,7 +10,7 @@ import streamlit.components.v1 as components
 st.set_page_config(page_title="META INDO PRO", layout="wide", initial_sidebar_state="expanded")
 st_autorefresh(interval=30000, key="freshengine")
 
-# 2. BOOTSTRAP 5 & CLEAN CSS
+# 2. BOOTSTRAP 5 & CLEAN CSS (FIXED CURLY BRACES)
 st.markdown("""
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
@@ -51,7 +51,7 @@ with st.sidebar:
         index=0
     )
     st.markdown("---")
-    st.caption("v.46 | Stable Version")
+    st.caption("v.47 | Stable Build")
 
 # 4. DATA ENGINE
 @st.cache_data(ttl=20)
@@ -83,14 +83,53 @@ def get_master_data():
         except: continue
     return pd.DataFrame([{"SYMBOL": "BTC", "PRICE": 0.0, "CHANGE": 0.0, "VOLUME 24H": "BUSY"}]), "🔴 BUSY"
 
-# 5. RENDER
+# 5. RENDER LOGIC
 tz = pytz.timezone('Asia/Jakarta')
 time_now = datetime.now(tz).strftime("%H:%M:%S")
 
-# Header Bar
+# NAVBAR ATAS (Pake f-string yang sudah aman)
 st.markdown(f"""
     <div class="nav-bar-top">
         <div class="brand-id">META INDO PRO</div>
         <div class="d-flex align-items-center">
             <span class="dot-live"></span>
-            <span
+            <span style="color: #02c076; font-size: 13px; font-weight: bold; margin-right: 20px;">LIVE MARKET</span>
+            <span class="text-secondary" style="font-size: 13px;">{time_now} WIB</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+if nav_choice == "📊 Terminal Market":
+    df, net_status = get_master_data()
+    col_left, col_right = st.columns([1.2, 2.8])
+    
+    with col_left:
+        st.markdown('<div class="card-panel">', unsafe_allow_html=True)
+        st.write("##### 📊 Top Volume")
+        st.dataframe(df, use_container_width=True, hide_index=True, height=500)
+        st.caption(f"Network: {net_status}")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with col_right:
+        st.markdown('<div class="card-panel">', unsafe_allow_html=True)
+        st.write("##### 📈 Analysis")
+        tv_html = """
+        <div id="tv-chart" style="height:500px;"></div>
+        <script src="https://s3.tradingview.com/tv.js"></script>
+        <script>
+        new TradingView.widget({"autosize": true, "symbol": "BINANCE:BTCUSDT", "interval": "60", "theme": "dark", "style": "1", "locale": "en", "toolbar_bg": "#f1f3f6", "allow_symbol_change": true, "container_id": "tv-chart"});
+        </script>
+        """
+        components.html(tv_html, height=510)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+elif nav_choice == "🚀 Trading Hub":
+    st.markdown('<div class="card-panel"><h3>🚀 Trading Hub</h3><p>Integrasi order sedang dikembangkan.</p></div>', unsafe_allow_html=True)
+
+elif nav_choice == "⚙️ System Settings":
+    st.markdown('<div class="card-panel"><h3>⚙️ Diagnostics</h3>', unsafe_allow_html=True)
+    if "BINANCE_API_KEY" in st.secrets:
+        st.success("API Key Active")
+    else:
+        st.warning("API Key Missing")
+    st.markdown('</div>', unsafe_allow_html=True)
