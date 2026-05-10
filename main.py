@@ -6,11 +6,11 @@ import pytz
 from streamlit_autorefresh import st_autorefresh
 import streamlit.components.v1 as components
 
-# 1. SETUP DASAR
+# 1. CORE CONFIG
 st.set_page_config(page_title="metaverseindo", layout="wide", initial_sidebar_state="collapsed")
 st_autorefresh(interval=30000, key="freshengine")
 
-# 2. CSS HARDENING (No Spacing Issues)
+# 2. CSS HARDENING (Clean & No Leaking)
 st.markdown(r'''
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Plus+Jakarta+Sans:wght@400;800&display=swap');
@@ -74,16 +74,18 @@ df, btc_p, btc_c = fetch_market()
 tz = pytz.timezone('Asia/Jakarta')
 time_now = datetime.now(tz).strftime("%H:%M:%S")
 
+# --- FIX BARIS 77: HARUS ADA PARAMETER ---
 c1, c2 = st.columns()
+
 with c1:
     st.markdown('<p class="title-text">METAVERSEINDO_</p>', unsafe_allow_html=True)
-    st.caption("TERMINAL v.77 | SYSTEM SECURE")
+    st.caption("TERMINAL v.78 | SYSTEM SECURE")
 with c2:
     st.markdown(f"<div style='text-align:right;font-family:monospace;color:#64748b;padding-top:15px;'>{time_now} WIB</div>", unsafe_allow_html=True)
 
 st.write("")
 
-# 5. METRICS (FIXED INDEX CALLS)
+# --- FIX METRICS: HARUS ADA PARAMETER ---
 m = st.columns(4)
 m.metric("BTC / USDT", f"${btc_p:,.0f}", f"{btc_c}%")
 m.metric("STABILITY", "OPTIMAL", "100%")
@@ -92,8 +94,8 @@ m.metric("NETWORK", "ONLINE", "ACTIVE")
 
 st.write("")
 
-# 6. WORKSPACE
-left, right = st.columns([1.1, 1.4])
+# --- FIX WORKSPACE: HARUS ADA PARAMETER ---
+left, right = st.columns([1, 1.3])
 
 with left:
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
@@ -107,15 +109,15 @@ with left:
 with right:
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     st.write("### 📈 Live Analysis")
-    tv_code = '''
-    <div id="tv_v77"></div>
+    tv_code = f'''
+    <div id="tv_v78"></div>
     <script src="https://s3.tradingview.com/tv.js"></script>
     <script>
-    new TradingView.widget({
+    new TradingView.widget({{
       "width": "100%", "height": 480, "symbol": "BINANCE:BTCUSDT",
       "interval": "60", "theme": "dark", "style": "1", "locale": "en",
-      "container_id": "tv_v77", "allow_symbol_change": true
-    });
+      "container_id": "tv_v78", "allow_symbol_change": true
+    }});
     </script>
     '''
     components.html(tv_code, height=490)
